@@ -14,12 +14,18 @@ from lasagne.layers import InverseLayer
 import os
 import time
 import cPickle as pickle
+import read_data
 
 dataset_dir = "../data/"
+input_path = "D:/data/subset7/subset7/"
+target_path = "D:/data/seg-lungs-LUNA16/seg-lungs-LUNA16/"
+
+inputs = os.listdir(input_path)
+
 filter_size = (3,3)
 learning_rate = 0.001
-n_filters = 64
-n_dense = 4096
+n_filters = 32 #64
+n_dense = 2048 #4096
 n_epochs = 100
 n_batches = 1
 
@@ -83,10 +89,10 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=True):
 
 def create_network():
     inputs = T.tensor4('X')
-    targets = T.ivector('Y')
+    targets = T.tensor4('Y')
     
     #input
-    input_layer = lasagne.layers.InputLayer(shape=(None, 3, 244, 244), input_var = inputs)
+    input_layer = lasagne.layers.InputLayer(shape=(None, 1, 512, 512), input_var = inputs)
     print lasagne.layers.get_output_shape(input_layer)
     
     #Conv 64
@@ -94,7 +100,7 @@ def create_network():
     print lasagne.layers.get_output_shape(conv64)
     
     #Max pool
-    pool0 = lasagne.layers.MaxPool2DLayer(conv64, pool_size=(2, 2), stride=1)
+    pool0 = lasagne.layers.MaxPool2DLayer(conv64, pool_size=(2, 2))
     print lasagne.layers.get_output_shape(pool0)
     
     #Conv x1 128
@@ -102,7 +108,7 @@ def create_network():
     print lasagne.layers.get_output_shape(conv128)
     
     #Max pool
-    pool1 = lasagne.layers.MaxPool2DLayer(conv128, pool_size=(2, 2), stride=1)    
+    pool1 = lasagne.layers.MaxPool2DLayer(conv128, pool_size=(2, 2))    
     print lasagne.layers.get_output_shape(pool1)
     
     #Conv x2 256
@@ -111,7 +117,7 @@ def create_network():
     print lasagne.layers.get_output_shape(conv256_1)
     
     #Max pool
-    pool2 = lasagne.layers.MaxPool2DLayer(conv256_1, pool_size=(2, 2), stride=2)        
+    pool2 = lasagne.layers.MaxPool2DLayer(conv256_1, pool_size=(2, 2))        
     print lasagne.layers.get_output_shape(pool2)
     
     #Conv x2 512
@@ -120,7 +126,7 @@ def create_network():
     print lasagne.layers.get_output_shape(conv512_1)
 
     #Max pool
-    pool3= lasagne.layers.MaxPool2DLayer(conv512_1, pool_size=(2, 2), stride=2)    
+    pool3= lasagne.layers.MaxPool2DLayer(conv512_1, pool_size=(2, 2))    
     print lasagne.layers.get_output_shape(pool3)
     
     #Conv x2 512
@@ -129,28 +135,61 @@ def create_network():
     print lasagne.layers.get_output_shape(conv512_3)
     
     #Max pool
-    pool4 = lasagne.layers.MaxPool2DLayer(conv512_3, pool_size=(2, 2), stride=2)   
+    pool4 = lasagne.layers.MaxPool2DLayer(conv512_3, pool_size=(2, 2))   
     output_shape = lasagne.layers.get_output_shape(pool4)
     print output_shape
     
     #Dense x2 4096    
-    dropout0 = lasagne.layers.DropoutLayer(pool4, p=0.5)
+    dropout0 = lasagne.layers.DropoutLayer(pool4, p=0.5) #check if dropout is needed 
     dense0 = lasagne.layers.Conv2DLayer(dropout0, n_dense, (output_shape[2:]), nonlinearity=lasagne.nonlinearities.rectify)
     output_shape = lasagne.layers.get_output_shape(dense0)
     print output_shape
-    dropout1 = lasagne.layers.DropoutLayer(dense0, p=0.5)
-    dense1 = lasagne.layers.Conv2DLayer(dropout1, n_dense, (output_shape[2:]), nonlinearity=lasagne.nonlinearities.rectify)
-    print lasagne.layers.get_output_shape(dense1)
+    
+    #dropout1 = lasagne.layers.DropoutLayer(dense0, p=0.5)
+    #dense1 = lasagne.layers.Conv2DLayer(dropout1, n_dense, (output_shape[2:]), nonlinearity=lasagne.nonlinearities.rectify)
+    dedense0 = InverseLayer(dense0, dense0)
+    print lasagne.layers.get_output_shape(dedense0)
 
     
     #1x1 conv, 2 filters (for 2 classes)
-    conv1x1= lasagne.layers.Conv2DLayer(dense1, 2, (1,1), nonlinearity=lasagne.nonlinearities.rectify)
-    print lasagne.layers.get_output_shape(conv1x1)
+    #conv1x1= lasagne.layers.Conv2DLayer(dense1, 2, (1,1), nonlinearity=lasagne.nonlinearities.rectify)
+    #print lasagne.layers.get_output_shape(conv1x1)
     
-    deconv0 = InverseLayer(conv1x1, conv64) 
-    print lasagne.layers.get_output_shape(deconv0)
+    #Depoolig 4th pooling layer
+    depool4 = InverseLayer(dedense0, pool4) 
+    print lasagne.layers.get_output_shape(depool4)
     
-    network = deconv0    
+    deconv512_3 = InverseLayer(depool4, conv512_3)
+    deconv512_2 = InverseLayer(deconv512_3, conv512_2)
+    print lasagne.layers.get_output_shape(deconv512_2)
+    
+    depool3 = InverseLayer(deconv512_2, pool3)
+    print lasagne.layers.get_output_shape(depool3)
+    
+    deconv512_1 = InverseLayer(depool3, conv512_1)
+    deconv512_0 = InverseLayer(deconv512_1, conv512_0)
+    print lasagne.layers.get_output_shape(deconv512_0)
+    
+    depool2 = InverseLayer(deconv512_0, pool2)
+    print lasagne.layers.get_output_shape(depool2)
+    
+    deconv256_1 = InverseLayer(depool2, conv256_1)
+    deconv256_0 = InverseLayer(deconv256_1, conv256_0)
+    print lasagne.layers.get_output_shape(deconv256_0)
+    
+    depool1 = InverseLayer(deconv256_0, pool1)
+    print lasagne.layers.get_output_shape(depool1)    
+    
+    deconv128 = InverseLayer(depool1, conv128)
+    print lasagne.layers.get_output_shape(deconv128)    
+    
+    depool0 = InverseLayer(deconv128, pool0)    
+    print lasagne.layers.get_output_shape(depool0)        
+        
+    deconv64 = InverseLayer(depool0, conv64)
+    print lasagne.layers.get_output_shape(deconv64)
+       
+    network = deconv64
     
     return inputs, targets, network
     
@@ -166,15 +205,15 @@ def training(inputs, targets, network, train_X, train_Y, val_X, val_Y):
     params = lasagne.layers.get_all_params(network, trainable=True)
     updates = lasagne.updates.momentum(loss, params, learning_rate=learning_rate)
 
-
+    """
     test_prediction = lasagne.layers.get_output(network, deterministic=True)
     test_loss = lasagne.objectives.categorical_crossentropy(test_prediction, targets)
     test_loss = test_loss.mean()
     acc = T.mean(T.eq(T.argmax(test_prediction, axis=1), targets), dtype=theano.config.floatX)
-
+    """
     #Train anv validation functions    
     train_fn = theano.function([inputs, targets], loss, updates=updates)
-    val_fn = theano.function([inputs, targets], [test_prediction, test_loss, acc])
+    #val_fn = theano.function([inputs, targets], [test_prediction, test_loss, acc])
     
     begin = time.time()
     print "Start training" 
@@ -185,12 +224,14 @@ def training(inputs, targets, network, train_X, train_Y, val_X, val_Y):
         train_err = 0
         train_batches = 0
         start_time = time.time()
-        for batch in iterate_minibatches(train_X, train_Y, 32, shuffle=True):
-            inputs, targets = batch
+        #for batch in iterate_minibatches(train_X, train_Y, 32, shuffle=True):
+        for filename in os.listdir(input_path):
+            inputs, targets = read_data.load_itk_images(input_path+filename, target_path+filename)
             train_err += train_fn(inputs, targets)
             train_batches += 1
     
         # ...and a full pass over the validation data
+        """       
         val_err = 0
         val_acc = 0
         val_batches = 0
@@ -200,21 +241,21 @@ def training(inputs, targets, network, train_X, train_Y, val_X, val_Y):
             val_err += err
             val_acc += acc
             val_batches += 1
-    
+        """
         # Then we print the results for this epoch:
         print("Epoch {} of {} took {:.3f}s".format(
             epoch + 1, n_epochs, time.time() - start_time))
         print("  training loss:\t\t{:.6f}".format(train_err / train_batches))
-        print("  validation loss:\t\t{:.6f}".format(val_err / val_batches))
-        print("  validation accuracy:\t\t{:.2f} %".format(
-            val_acc / val_batches * 100))
-        curves['train_loss'].append(train_err / train_batches)
-        curves['val_loss'].append(val_err / val_batches)
-        curves['val_acc'].append(val_acc / val_batches)
+        #print("  validation loss:\t\t{:.6f}".format(val_err / val_batches))
+        #print("  validation accuracy:\t\t{:.2f} %".format(
+        #    val_acc / val_batches * 100))
+        #curves['train_loss'].append(train_err / train_batches)
+        #curves['val_loss'].append(val_err / val_batches)
+        #curves['val_acc'].append(val_acc / val_batches)
 
     print "Total runtime: " +str(time.time()-begin)
     
-    return curves, val_fn 
+    return #curves, #val_fn 
     
 def save_result(curves, file_path = '../plots/', name = "vdcn"):
     plt.plot(zip(curves['train_loss'], curves['val_loss']));
@@ -229,7 +270,7 @@ def save_result(curves, file_path = '../plots/', name = "vdcn"):
 if __name__ == '__main__':
     #train_x, train_y, val_x, val_y = prepare_trainings_data()
     inputs, targets, network = create_network()
-    #curves, val_fn = training(inputs, targets, network, train_x, train_y, val_x, val_y)
+    curves, val_fn = training(inputs, targets, network, 0, 0, 0, 0)
     #save_result(curves)
     
     
