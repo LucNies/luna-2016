@@ -25,7 +25,7 @@ target_path = "D:/data/seg-lungs-LUNA16/seg-lungs-LUNA16/"
 #inputs = os.listdir(input_path)
 
 filter_size = (3,3)
-learning_rate = 0.001
+learning_rate = 0.0001
 n_filters = 12 #64
 n_dense = 1024 #4096
 n_epochs = 50
@@ -94,57 +94,75 @@ def create_network():
     targets = T.tensor4('Y')
     
     #input
-    input_layer = lasagne.layers.InputLayer(shape=(None, 1, 512, 512), input_var = inputs)
+    input_layer = lasagne.layers.InputLayer(shape=(None, 1, None, None), input_var = inputs)
     print lasagne.layers.get_output_shape(input_layer)
     
     #Conv 64
-    conv64 = lasagne.layers.Conv2DLayer(input_layer, n_filters, filter_size, nonlinearity=lasagne.nonlinearities.rectify)
+    conv64 = lasagne.layers.Conv2DLayer(input_layer, n_filters, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
     print lasagne.layers.get_output_shape(conv64)
     
-    pool0 = lasagne.layers.MaxPool2DLayer(conv64, pool_size=(2, 2))
+    #Max pool
+    #pool0 = lasagne.layers.MaxPool2DLayer(conv64, pool_size=(2, 2))
+    #print lasagne.layers.get_output_shape(pool0)
     
     #Conv x1 128
-    conv128 = lasagne.layers.Conv2DLayer(pool0, n_filters*2, filter_size, nonlinearity=lasagne.nonlinearities.rectify)
+    conv128 = lasagne.layers.Conv2DLayer(conv64, n_filters*2, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
     print lasagne.layers.get_output_shape(conv128)
     
-    pool1 = lasagne.layers.MaxPool2DLayer(conv128, pool_size=(2, 2))
-    
+    #Max pool
+    pool1 = lasagne.layers.MaxPool2DLayer(conv128, pool_size=(2, 2))    
+    print lasagne.layers.get_output_shape(pool1)
     
     #Conv x2 256
-    conv256_0 = lasagne.layers.Conv2DLayer(pool1, n_filters*4, filter_size, nonlinearity=lasagne.nonlinearities.rectify)
+    conv256_0 = lasagne.layers.Conv2DLayer(pool1, n_filters*4, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
     print lasagne.layers.get_output_shape(conv256_0)
+    conv256_1 = lasagne.layers.Conv2DLayer(conv256_0, n_filters*4, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
+    print lasagne.layers.get_output_shape(conv256_1)
     
-    pool2 = lasagne.layers.MaxPool2DLayer(conv256_0, pool_size=(2, 2))
+    #Max pool
+    pool2 = lasagne.layers.MaxPool2DLayer(conv256_1, pool_size=(2, 2))        
+    print lasagne.layers.get_output_shape(pool2)
     
+    #Conv x2 512
+    conv512_0 = lasagne.layers.Conv2DLayer(pool2, n_filters*8, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
+    print lasagne.layers.get_output_shape(conv512_0)
+    conv512_1 = lasagne.layers.Conv2DLayer(conv512_0, n_filters*8, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
+    print lasagne.layers.get_output_shape(conv512_1)
+
+    #Max pool
+    pool3= lasagne.layers.MaxPool2DLayer(conv512_1, pool_size=(2, 2))    
+    output_shape = lasagne.layers.get_output_shape(pool3)
+    print lasagne.layers.get_output_shape(pool3)
+    
+    #Conv x2 512
+    #conv512_2 = lasagne.layers.Conv2DLayer(pool3, n_filters*8, filter_size, nonlinearity=lasagne.nonlinearities.rectify)
+    #print lasagne.layers.get_output_shape(conv512_2)
+    #conv512_3= lasagne.layers.Conv2DLayer(conv512_2, n_filters*8, filter_size, nonlinearity=lasagne.nonlinearities.rectify)
+    #print lasagne.layers.get_output_shape(conv512_3)
+    
+    #Max pool
+    #pool4 = lasagne.layers.MaxPool2DLayer(conv512_3, pool_size=(2, 2))   
+    #output_shape = lasagne.layers.get_output_shape(pool4)
+    #print output_shape
     
     #Dense x2 4096    
-    dropout0 = lasagne.layers.DropoutLayer(pool2, p=0.5) #check if dropout is needed 
-    dense0 = lasagne.layers.Conv2DLayer(dropout0, n_dense, (lasagne.layers.get_output_shape(pool2)[2:]), nonlinearity=lasagne.nonlinearities.rectify)
+    dropout0 = lasagne.layers.DropoutLayer(pool3, p=0.5) #check if dropout is needed 
+    dense0 = lasagne.layers.Conv2DLayer(dropout0, n_dense, (4, 4), nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
     output_shape = lasagne.layers.get_output_shape(dense0)
     print output_shape
     
-    #dropout1 = lasagne.layers.DropoutLayer(dense0, p=0.5)
-    #dense1 = lasagne.layers.Conv2DLayer(dropout1, n_dense, (output_shape[2:]), nonlinearity=lasagne.nonlinearities.rectify)
-    dedense0 = InverseLayer(dense0, dense0)
-    print lasagne.layers.get_output_shape(dedense0)
-
-    depool2 = InverseLayer(dedense0, pool2)    
+    #Dense x2 4096    
+    dropout1 = lasagne.layers.DropoutLayer(dense0, p=0.5) #check if dropout is needed 
+    dense1 = lasagne.layers.Conv2DLayer(dropout1, n_dense, (1, 1), nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
+    output_shape = lasagne.layers.get_output_shape(dense1)
+    print output_shape
     
-    deconv256_0 = InverseLayer(depool2, conv256_0)
-    print lasagne.layers.get_output_shape(deconv256_0)
+    output = lasagne.layers.Conv2DLayer(dense1, 1, (1, 1), nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
+    output_shape = lasagne.layers.get_output_shape(output)
+    print output_shape
     
-    depool1 = InverseLayer(deconv256_0, pool1)    
     
-    deconv128 = InverseLayer(depool1, conv128)
-    print lasagne.layers.get_output_shape(deconv128)    
-    
-    depool0 = InverseLayer(deconv128, pool0)       
-       
-    deconv64 = InverseLayer(depool0, conv64)
-    print lasagne.layers.get_output_shape(deconv64)
-       
-    network = deconv64
-    
+    network = output
     return inputs, targets, network
     
 
@@ -152,12 +170,13 @@ def create_network():
 def training(inputs, targets, network, train_X, train_Y, val_X, val_Y):
     
     #loss function
-    prediction = lasagne.layers.get_output(network)
-    loss = lasagne.objectives.categorical_crossentropy(prediction, targets)
+    prediction = lasagne.layers.get_output(network) + 0.000001
+    loss = lasagne.objectives.binary_crossentropy(prediction, targets) + 0.01 * lasagne.regularization.regularize_network_params(network, lasagne.regularization.l2)
     loss = loss.mean()
+    loss = T.clip(loss, -1, 1)
 
     params = lasagne.layers.get_all_params(network, trainable=True)
-    updates = lasagne.updates.momentum(loss, params, learning_rate=learning_rate)
+    updates = lasagne.updates.sgd(loss, params, learning_rate=learning_rate)
 
     """
     test_prediction = lasagne.layers.get_output(network, deterministic=True)
@@ -166,7 +185,7 @@ def training(inputs, targets, network, train_X, train_Y, val_X, val_Y):
     acc = T.mean(T.eq(T.argmax(test_prediction, axis=1), targets), dtype=theano.config.floatX)
     """
     #Train anv validation functions    
-    train_fn = theano.function([inputs, targets], loss, updates=updates)
+    train_fn = theano.function([inputs, targets], [loss, prediction], updates=updates)
     #val_fn = theano.function([inputs, targets], [test_prediction, test_loss, acc])
     
     begin = time.time()
@@ -181,7 +200,9 @@ def training(inputs, targets, network, train_X, train_Y, val_X, val_Y):
         #for batch in iterate_minibatches(train_X, train_Y, 32, shuffle=True):
         print "epoch {}...".format(epoch)
         for inputs, targets in tqdm(Reader()):
-            train_err += train_fn(inputs, targets)
+            loss, prediction = train_fn(inputs, targets)
+            train_err += loss
+            train_batches+=1
 
     
         # ...and a full pass over the validation data
@@ -199,7 +220,7 @@ def training(inputs, targets, network, train_X, train_Y, val_X, val_Y):
         # Then we print the results for this epoch:
         print("Epoch {} of {} took {:.3f}s".format(
             epoch + 1, n_epochs, time.time() - start_time))
-        print("  training loss:\t\t{:.6f}".format(train_err / train_batches))
+        print("  training loss:\t\t{:.6f}".format(train_err / float(train_batches)))
         #print("  validation loss:\t\t{:.6f}".format(val_err / val_batches))
         #print("  validation accuracy:\t\t{:.2f} %".format(
         #    val_acc / val_batches * 100))

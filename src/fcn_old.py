@@ -5,7 +5,6 @@ Created on Wed Apr 27 22:01:02 2016
 @author: Luc
 """
 
-from read_data import Reader
 import numpy as np
 import theano
 import theano.tensor as T
@@ -16,19 +15,18 @@ import os
 import time
 import cPickle as pickle
 import read_data
-from tqdm import tqdm
 
 dataset_dir = "../data/"
 input_path = "D:/data/subset7/"
-target_path = "D:/data/seg-lungs-LUNA16/seg-lungs-LUNA16/"
+target_path = "D:/data/seg-lungs-LUNA16/"
 
-#inputs = os.listdir(input_path)
+inputs = os.listdir(input_path)
 
 filter_size = (3,3)
 learning_rate = 0.001
-n_filters = 12 #64
-n_dense = 1024 #4096
-n_epochs = 50
+n_filters = 32 #64
+n_dense = 2048 #4096
+n_epochs = 100
 n_batches = 1
 
 
@@ -101,25 +99,49 @@ def create_network():
     conv64 = lasagne.layers.Conv2DLayer(input_layer, n_filters, filter_size, nonlinearity=lasagne.nonlinearities.rectify)
     print lasagne.layers.get_output_shape(conv64)
     
+    #Max pool
     pool0 = lasagne.layers.MaxPool2DLayer(conv64, pool_size=(2, 2))
+    print lasagne.layers.get_output_shape(pool0)
     
     #Conv x1 128
     conv128 = lasagne.layers.Conv2DLayer(pool0, n_filters*2, filter_size, nonlinearity=lasagne.nonlinearities.rectify)
     print lasagne.layers.get_output_shape(conv128)
     
-    pool1 = lasagne.layers.MaxPool2DLayer(conv128, pool_size=(2, 2))
-    
+    #Max pool
+    pool1 = lasagne.layers.MaxPool2DLayer(conv128, pool_size=(2, 2))    
+    print lasagne.layers.get_output_shape(pool1)
     
     #Conv x2 256
-    conv256_0 = lasagne.layers.Conv2DLayer(pool1, n_filters*4, filter_size, nonlinearity=lasagne.nonlinearities.rectify)
-    print lasagne.layers.get_output_shape(conv256_0)
+    conv256_0 = lasagne.layers.Conv2DLayer(conv128, n_filters*4, filter_size, nonlinearity=lasagne.nonlinearities.rectify)
+    conv256_1 = lasagne.layers.Conv2DLayer(conv256_0, n_filters*4, filter_size, nonlinearity=lasagne.nonlinearities.rectify)
+    print lasagne.layers.get_output_shape(conv256_1)
     
-    pool2 = lasagne.layers.MaxPool2DLayer(conv256_0, pool_size=(2, 2))
+    #Max pool
+    pool2 = lasagne.layers.MaxPool2DLayer(conv256_1, pool_size=(2, 2))        
+    print lasagne.layers.get_output_shape(pool2)
     
+    #Conv x2 512
+    conv512_0 = lasagne.layers.Conv2DLayer(pool2, n_filters*8, filter_size, nonlinearity=lasagne.nonlinearities.rectify)
+    conv512_1 = lasagne.layers.Conv2DLayer(conv512_0, n_filters*8, filter_size, nonlinearity=lasagne.nonlinearities.rectify)
+    print lasagne.layers.get_output_shape(conv512_1)
+
+    #Max pool
+    pool3= lasagne.layers.MaxPool2DLayer(conv512_1, pool_size=(2, 2))    
+    print lasagne.layers.get_output_shape(pool3)
+    
+    #Conv x2 512
+    conv512_2 = lasagne.layers.Conv2DLayer(pool3, n_filters*8, filter_size, nonlinearity=lasagne.nonlinearities.rectify)
+    conv512_3= lasagne.layers.Conv2DLayer(conv512_2, n_filters*8, filter_size, nonlinearity=lasagne.nonlinearities.rectify)
+    print lasagne.layers.get_output_shape(conv512_3)
+    
+    #Max pool
+    pool4 = lasagne.layers.MaxPool2DLayer(conv512_3, pool_size=(2, 2))   
+    output_shape = lasagne.layers.get_output_shape(pool4)
+    print output_shape
     
     #Dense x2 4096    
-    dropout0 = lasagne.layers.DropoutLayer(pool2, p=0.5) #check if dropout is needed 
-    dense0 = lasagne.layers.Conv2DLayer(dropout0, n_dense, (lasagne.layers.get_output_shape(pool2)[2:]), nonlinearity=lasagne.nonlinearities.rectify)
+    dropout0 = lasagne.layers.DropoutLayer(pool4, p=0.5) #check if dropout is needed 
+    dense0 = lasagne.layers.Conv2DLayer(dropout0, n_dense, (output_shape[2:]), nonlinearity=lasagne.nonlinearities.rectify)
     output_shape = lasagne.layers.get_output_shape(dense0)
     print output_shape
     
@@ -128,18 +150,42 @@ def create_network():
     dedense0 = InverseLayer(dense0, dense0)
     print lasagne.layers.get_output_shape(dedense0)
 
-    depool2 = InverseLayer(dedense0, pool2)    
     
-    deconv256_0 = InverseLayer(depool2, conv256_0)
+    #1x1 conv, 2 filters (for 2 classes)
+    #conv1x1= lasagne.layers.Conv2DLayer(dense1, 2, (1,1), nonlinearity=lasagne.nonlinearities.rectify)
+    #print lasagne.layers.get_output_shape(conv1x1)
+    
+    #Depoolig 4th pooling layer
+    depool4 = InverseLayer(dedense0, pool4) 
+    print lasagne.layers.get_output_shape(depool4)
+    
+    deconv512_3 = InverseLayer(depool4, conv512_3)
+    deconv512_2 = InverseLayer(deconv512_3, conv512_2)
+    print lasagne.layers.get_output_shape(deconv512_2)
+    
+    depool3 = InverseLayer(deconv512_2, pool3)
+    print lasagne.layers.get_output_shape(depool3)
+    
+    deconv512_1 = InverseLayer(depool3, conv512_1)
+    deconv512_0 = InverseLayer(deconv512_1, conv512_0)
+    print lasagne.layers.get_output_shape(deconv512_0)
+    
+    depool2 = InverseLayer(deconv512_0, pool2)
+    print lasagne.layers.get_output_shape(depool2)
+    
+    deconv256_1 = InverseLayer(depool2, conv256_1)
+    deconv256_0 = InverseLayer(deconv256_1, conv256_0)
     print lasagne.layers.get_output_shape(deconv256_0)
     
-    depool1 = InverseLayer(deconv256_0, pool1)    
+    depool1 = InverseLayer(deconv256_0, pool1)
+    print lasagne.layers.get_output_shape(depool1)    
     
     deconv128 = InverseLayer(depool1, conv128)
     print lasagne.layers.get_output_shape(deconv128)    
     
-    depool0 = InverseLayer(deconv128, pool0)       
-       
+    depool0 = InverseLayer(deconv128, pool0)    
+    print lasagne.layers.get_output_shape(depool0)        
+        
     deconv64 = InverseLayer(depool0, conv64)
     print lasagne.layers.get_output_shape(deconv64)
        
@@ -179,10 +225,10 @@ def training(inputs, targets, network, train_X, train_Y, val_X, val_Y):
         train_batches = 0
         start_time = time.time()
         #for batch in iterate_minibatches(train_X, train_Y, 32, shuffle=True):
-        print "epoch {}...".format(epoch)
-        for inputs, targets in tqdm(Reader()):
+        for filename in os.listdir(input_path):
+            inputs, targets = read_data.load_itk_images(input_path+filename, target_path+filename)
             train_err += train_fn(inputs, targets)
-
+            train_batches += 1
     
         # ...and a full pass over the validation data
         """       
