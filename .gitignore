@@ -63,3 +63,6 @@ target/
 
 # Mac OS generated files
 .DS_Store
+
+# Data
+data/
