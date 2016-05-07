@@ -5,7 +5,7 @@ Created on Wed Apr 27 22:01:02 2016
 @author: Luc
 """
 
-from read_data import Reader
+from read_data_m import Reader
 import numpy as np
 import theano
 import theano.tensor as T
@@ -107,10 +107,10 @@ def training(network, train_X, train_Y, val_X, val_Y):
 
     lambda2=0.00001
     lr = 0.0001
-    Y = T.fmatrix()
+    Y = T.imatrix()
     ftensor4 = T.TensorType('float32', (False,)*4)
     X = ftensor4()
-    prediction = lasagne.layers.get_output(network)
+    prediction = lasagne.layers.get_output(network, inputs = X)
     e_x = np.exp(prediction - prediction.max(axis=1, keepdims=True))
     out = (e_x / e_x.sum(axis=1, keepdims=True)).flatten(2)
     loss = lasagne.objectives.categorical_crossentropy(T.clip(out, 0.0001, 0.9999), Y)

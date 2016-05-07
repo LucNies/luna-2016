@@ -57,13 +57,13 @@ class Reader:
             n_patches = 1
 
             patch_batch = np.zeros((n_patches*len(batch), 1, 64, 64), dtype=np.float32)
-            patch_labels = np.zeros((n_patches*len(batch), 1, 1, 1), dtype=np.float32)
+            patch_labels = np.zeros((n_patches*len(batch), 2), dtype=np.float32)
             
             
             for i in range(len(batch)):
                 image_patches, image_labels = patch(batch[i], labels[i], n_patches)
                 patch_batch[i:i+n_patches] = image_patches
-                patch_labels[i:i+n_patches, 0, 0, 0] = image_labels
+                patch_labels[i:i+n_patches] = image_labels
             
             
             self.current+=1
