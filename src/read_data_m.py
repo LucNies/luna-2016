@@ -78,12 +78,12 @@ def patch(image, labels, n_patches=1000):
     # label: (n_patches)
 
     patches = np.zeros((n_patches, 1, 64, 64), dtype=np.float32)
-    patch_labels = np.zeros((n_patches), dtype=np.float32)
+    patch_labels = np.zeros((n_patches, 2), dtype=np.float32)
 
     for i in range(n_patches):
         coords = np.random.randint(0, 512-64, size=2)
         patches[i, 0, :, :] = image[coords[0]:coords[0]+64, coords[1]:coords[1]+64]
-        patch_labels[i] = labels[coords[0]+32, coords[1]+32]
+        patch_labels[i] = [1-labels[coords[0]+32, coords[1]+32], labels[coords[0]+32, coords[1]+32]]
         
     return patches, patch_labels
 

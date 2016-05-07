@@ -34,11 +34,10 @@ n_batches = 1
 
 
 def create_network():
-    inputs = T.tensor4('X')
-    targets = T.tensor4('Y')
+    
     
     #input
-    input_layer = lasagne.layers.InputLayer(shape=(None, 1, None, None), input_var = inputs)
+    input_layer = lasagne.layers.InputLayer(shape=(None, 1, None, None))
     print lasagne.layers.get_output_shape(input_layer)
     
     #Conv 64
@@ -92,27 +91,34 @@ def create_network():
     output_shape = lasagne.layers.get_output_shape(dense1)
     print output_shape
     
-    output = lasagne.layers.Conv2DLayer(dense1, 1, (1, 1), nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
+    # a last layer of 2 neurons, that later on enter softmax
+    output = lasagne.layers.Conv2DLayer(dense1, 2, (1, 1), nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
     output_shape = lasagne.layers.get_output_shape(output)
-    print output_shape
-    
+    print output_shape    
     
     network = output
-    return inputs, targets, network
+    return network
     
 
 
-def training(inputs, targets, network, train_X, train_Y, val_X, val_Y):
+def training(network, train_X, train_Y, val_X, val_Y):
     
     #loss function
-    prediction = lasagne.layers.get_output(network) + 0.00001
-    loss = lasagne.objectives.binary_crossentropy(prediction, targets) + 0.01 * lasagne.regularization.regularize_network_params(network, lasagne.regularization.l2)
-    loss = loss.mean()
-    loss = T.clip(loss, -1, 1)
 
+    lambda2=0.00001
+    lr = 0.0001
+    Y = T.fmatrix()
+    ftensor4 = T.TensorType('float32', (False,)*4)
+    X = ftensor4()
+    prediction = lasagne.layers.get_output(network)
+    e_x = np.exp(prediction - prediction.max(axis=1, keepdims=True))
+    out = (e_x / e_x.sum(axis=1, keepdims=True)).flatten(2)
+    loss = lasagne.objectives.categorical_crossentropy(T.clip(out, 0.0001, 0.9999), Y)
+    l2_loss =  lambda2 * lasagne.regularization.regularize_network_params(network, lasagne.regularization.l2)
+    loss = loss.mean() + l2_loss
     params = lasagne.layers.get_all_params(network, trainable=True)
-    updates = lasagne.updates.sgd(loss, params, learning_rate=learning_rate)
-
+    updates = lasagne.updates.adam(loss, params, learning_rate=lr, beta1=0.9, beta2=0.999, epsilon=1e-08)
+    train_fn = theano.function([X, Y], [loss, l2_loss, prediction], updates=updates, allow_input_downcast=True, on_unused_input='ignore')
     """
     test_prediction = lasagne.layers.get_output(network, deterministic=True)
     test_loss = lasagne.objectives.categorical_crossentropy(test_prediction, targets)
@@ -120,7 +126,7 @@ def training(inputs, targets, network, train_X, train_Y, val_X, val_Y):
     acc = T.mean(T.eq(T.argmax(test_prediction, axis=1), targets), dtype=theano.config.floatX)
     """
     #Train anv validation functions    
-    train_fn = theano.function([inputs, targets], [loss, prediction], updates=updates)
+    #train_fn = theano.function([inputs, targets], [loss, prediction], updates=updates)
     #val_fn = theano.function([inputs, targets], [test_prediction, test_loss, acc])
     
     begin = time.time()
@@ -133,7 +139,7 @@ def training(inputs, targets, network, train_X, train_Y, val_X, val_Y):
         #for batch in iterate_minibatches(train_X, train_Y, 32, shuffle=True):
         print "epoch {}...".format(epoch)
         for inputs, targets in tqdm(Reader()):
-            loss, prediction = train_fn(inputs, targets)
+            loss, l2_loss, prediction = train_fn(inputs, targets)
             train_err += loss
             train_batches+=1
 
@@ -150,8 +156,8 @@ def training(inputs, targets, network, train_X, train_Y, val_X, val_Y):
 
 if __name__ == '__main__':
 
-    inputs, targets, network = create_network()
-    training(inputs, targets, network, 0, 0, 0, 0)
+    network = create_network()
+    training(network, 0, 0, 0, 0)
 
     
     
