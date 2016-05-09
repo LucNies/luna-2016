@@ -22,7 +22,7 @@ class Reader:
     """
     Batch_size is currently unused! Returns all the slices of one subject atm
     """
-    def __init__(self, batch_size = 100, shuffle = True, meta_data = 'image_stats.stat', label_path = 'D:/data/seg-lungs-LUNA16/'):
+    def __init__(self, batch_size = 100, shuffle = True, meta_data = 'image_stats.stat', label_path = 'F:/Temp/CAD/data/seg-lungs-LUNA16/'):
         if not os.path.isfile(meta_data):
             preprocess.preprocess()
         
@@ -52,18 +52,18 @@ class Reader:
             label_location = self.label_path + split[len(split)-1]
             batch, labels = load_itk_images(image_location, label_location) 
             batch = batch - self.mean
-            labels = labels >= 3 
+            labels = labels >= 3
 
             n_patches = 1
 
             patch_batch = np.zeros((n_patches*len(batch), 1, 64, 64), dtype=np.float32)
             patch_labels = np.zeros((n_patches*len(batch), 2), dtype=np.float32)
-            
-            
+
+
             for i in range(len(batch)):
                 image_patches, image_labels = patch(batch[i], labels[i], n_patches)
-                patch_batch[i:i+n_patches] = image_patches
-                patch_labels[i:i+n_patches] = image_labels
+                patch_batch[i*n_patches:i*n_patches+n_patches] = image_patches
+                patch_labels[i*n_patches:i*n_patches+n_patches] = image_labels
             
             
             self.current+=1
