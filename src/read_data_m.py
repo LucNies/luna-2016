@@ -16,13 +16,18 @@ import matplotlib.pyplot as plt
 import util
 import preprocess
 import pickle
+import getpass
 
+if getpass.getuser() == 'harmen':
+    lbl_path = os.path.join("..", "data", "seg-lungs-LUNA16")
+else:
+    lbl_path = 'F:/Temp/CAD/data/seg-lungs-LUNA16/'
 
 class Reader:
     """
     Batch_size is currently unused! Returns all the slices of one subject atm
     """
-    def __init__(self, batch_size = 100, shuffle = True, meta_data = 'image_stats.stat', label_path = 'F:/Temp/CAD/data/seg-lungs-LUNA16/'):
+    def __init__(self, batch_size = 100, shuffle = True, meta_data = 'image_stats.stat', label_path = lbl_path, patch_shape = (64,64)):
         if not os.path.isfile(meta_data):
             preprocess.preprocess()
         
@@ -39,29 +44,27 @@ class Reader:
         self.label_path = label_path
         self.current = 0
         self.shuffle = shuffle
-        
+        self.patch_shape = patch_shape
+
     def __iter__(self):
         return self
-    
+
     def next(self):
         if self.current >self.n_samples-1:
             raise StopIteration
         else:
-            image_location = self.file_names[self.current]
-            split = image_location.split('/')
-            label_location = self.label_path + split[len(split)-1]
-            batch, labels = load_itk_images(image_location, label_location) 
+            batch, labels = load_itk_images(*self.get_locations())
             batch = batch - self.mean
             labels = labels >= 3
 
             n_patches = 1
 
-            patch_batch = np.zeros((n_patches*len(batch), 1, 64, 64), dtype=np.float32)
+            patch_batch = np.zeros((n_patches*len(batch), 1,) + self.patch_shape, dtype=np.float32)
             patch_labels = np.zeros((n_patches*len(batch), 2), dtype=np.float32)
 
 
             for i in range(len(batch)):
-                image_patches, image_labels = patch(batch[i], labels[i], n_patches)
+                image_patches, image_labels = self.patch(batch[i], labels[i], n_patches)
                 patch_batch[i*n_patches:i*n_patches+n_patches] = image_patches
                 patch_labels[i*n_patches:i*n_patches+n_patches] = image_labels
             
@@ -69,23 +72,38 @@ class Reader:
             self.current+=1
             return patch_batch, patch_labels
 
-def patch(image, labels, n_patches=1000):
-    # image: (1, 1, 512, 512)
-    # label: (1, 1, 512, 512)
 
-    # output:
-    # image: (n_patches, 1, 64, 64)
-    # label: (n_patches)
+    def patch(self, image, labels, n_patches=1000):
+        # image: (1, 1, 512, 512)
+        # label: (1, 1, 512, 512)
 
-    patches = np.zeros((n_patches, 1, 64, 64), dtype=np.float32)
-    patch_labels = np.zeros((n_patches, 2), dtype=np.float32)
+        # output:
+        # image: (n_patches, 1, 64, 64)
+        # label: (n_patches)
 
-    for i in range(n_patches):
-        coords = np.random.randint(0, 512-64, size=2)
-        patches[i, 0, :, :] = image[coords[0]:coords[0]+64, coords[1]:coords[1]+64]
-        patch_labels[i] = [1-labels[coords[0]+32, coords[1]+32], labels[coords[0]+32, coords[1]+32]]
-        
-    return patches, patch_labels
+        patches = np.zeros((n_patches, 1,) + self.patch_shape, dtype=np.float32)
+        patch_labels = np.zeros((n_patches, 2), dtype=np.float32)
+
+        pw, ph = self.patch_shape
+        for i in range(n_patches):
+            coords = np.random.randint(0, 512 - pw + 1), np.random.randint(0, 512 - ph + 1)
+            patches[i, 0, :, :] = image[coords[0]:coords[0]+pw, coords[1]:coords[1]+ph]
+            x = coords[0] + pw/2
+            y = coords[1] + ph/2
+            v = labels[int(x), int(y)]
+            patch_labels[i, :] = [1-v, v]
+
+        return patches, patch_labels
+
+
+    def get_locations(self):
+        image_location = self.file_names[self.current]
+        split = image_location.split('/')
+        label_location = os.path.join(self.label_path, split[-1])
+        return image_location, label_location
+
+    def load_itk_images(self, input_path, target_path):
+        return load_itk_images(input_path, target_path)
 
 
 def load_itk_images(input_path, target_path):

@@ -107,31 +107,6 @@ def create_network():
     return inputs, targets, network
 
 
-def shift_matrix(matrix, amount):
-    i,j = amount
-    N,M = matrix.shape()  # Required for a 0-shift
-    matrix_ = np.zeros_like(matrix)
-    matrix_[i:, j:] = matrix[:N-i, :M-j]
-    return matrix_
-
-
-def shift(inputs, targets, network):
-    indims = inputs.shape()
-    outdims = network.get_output_shape()
-
-    n_shifts = (indims[0] / float(outdims[0]),
-                indims[1] / float(outdims[1]))
-    assert(n_shifts[0].is_integer() and n_shifts[1].is_integer())
-    n_shifts = (int(n_shifts[0]), int(n_shifts[1]))
-
-    for i in range(n_shifts[0]):
-        for j in range(n_shifts[1]):
-            input_ = shift_matrix(input, (i,j))
-            if targets is not None:
-                targets_ = shift_matrix(targets, (i,j))
-                yield input_, targets_
-            else:
-                yield input_
 
 
 
@@ -167,9 +142,8 @@ def training(inputs, targets, network, train_X, train_Y, val_X, val_Y):
         #for batch in iterate_minibatches(train_X, train_Y, 32, shuffle=True):
         print "epoch {}...".format(epoch)
         for inputs, targets in tqdm(Reader()):
-            for inputs_, targets_ in shift(inputs, targets, network):
-                loss, prediction = train_fn(inputs_, targets_)
-                train_err += loss
+            loss, prediction = train_fn(inputs, targets)
+            train_err += loss
             train_batches+=1
 
 
