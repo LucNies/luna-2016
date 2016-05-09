@@ -1,0 +1,115 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{fourier}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{cprotect}
+\usepackage{tgtermes}
+
+\usepackage[
+pdftitle={Computer Aided Diagnosis}, 
+pdfauthor={Luc Nies, Tom van de Poll, Harmen Prins, Steven Reitsma \& Inez Wijnands, Radboud University Nijmegen},
+colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue,bookmarks=true,bookmarksopenlevel=2]{hyperref}
+\usepackage{amsmath,amssymb,amsthm,textcomp}
+\usepackage{enumerate}
+\usepackage{multicol}
+\usepackage{tikz}
+
+\usepackage{geometry}
+\geometry{total={210mm,297mm},
+left=25mm,right=25mm,%
+bindingoffset=0mm, top=20mm,bottom=20mm}
+
+\numberwithin{equation}{section} % Number equations within sections (i.e. 1.1 instead of 1)
+\numberwithin{figure}{section} % Number figures within sections (i.e. 1.1 i/o 1)
+\numberwithin{table}{section} % Number tables within sections (i.e. 1.1 i/of 1)
+
+\linespread{1.35}
+
+\newcommand{\linia}{\rule{\linewidth}{0.5pt}}
+
+% my own titles
+\makeatletter
+\renewcommand{\maketitle}{
+\begin{center}
+\vspace{2ex}
+{\huge \textsc{\@title}}
+\vspace{1ex}
+\\
+\linia\\
+\@author  \@date
+\vspace{4ex}
+\end{center}
+}
+\makeatother
+
+% custom footers and headers
+\usepackage{fancyhdr,lastpage}
+\pagestyle{fancy}
+\lhead{}
+\chead{}
+\rhead{}
+\lfoot{Phase \textnumero{} 1}
+\cfoot{}
+\rfoot{Page \thepage\ /\ \pageref*{LastPage}}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% code listing settings
+\usepackage{listings}
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    aboveskip={0.9\baselineskip},
+    belowskip={0.9\baselineskip},
+    columns=fixed,
+    extendedchars=true,
+    breaklines=true,
+    tabsize=4,
+    prebreak=\raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+    frame=lines,
+    showtabs=false,
+    showspaces=false,
+    showstringspaces=false,
+    keywordstyle=\color[rgb]{0.1,0.126,0.941},
+    commentstyle=\color[rgb]{0.133,0.545,0.133},
+    stringstyle=\color[rgb]{0,0.5,0},
+    numbers=left,
+    numberstyle=\scriptsize\ttfamily,
+    stepnumber=1,
+    numbersep=10pt,
+    captionpos=t,
+    escapeinside={\%*}{*)}
+}
+
+%%%----------%%%----------%%%----------%%%----------%%%
+
+\begin{document}
+
+\title{Computer Aided Diagnosis \\\vspace{0.2cm} Lung segmentation}
+
+\author{Luc Nies (s4136748), Tom van de Poll (s4106512), Harmen Prins (s4132297),\\ Steven Reitsma (s4132343) \& Inez Wijnands (s4149696)\\ Radboud University Nijmegen\\}
+
+\date{11/05/2016}
+
+\maketitle
+
+\section{Problem description}
+
+\section{Fully convolutional network}
+Paper by Long et al \cite{long2015fully}
+
+\section{Region growing in MeVisLab}
+
+\section{Results}
+
+\section{Conclusion}
+
+\bibliographystyle{amsplain}
+\bibliography{references}
+
+\end{document}
