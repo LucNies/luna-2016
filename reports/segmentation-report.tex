@@ -104,39 +104,40 @@ bindingoffset=0mm, top=20mm,bottom=20mm}
 Paper by Long et al \cite{long2015fully}
 
 \section{Region growing in MeVisLab}
-The biggest challenge with applying region growing in order to segment the lungs from and image is that in order to traditionally use region growing for segmentation, seed points need to be automatically selected inside the area that needs to be segmented. Since this is a difficult task, the descision is made to circumvent this problem by using region growing in a different way. The following algorithm is used for segmentation in MeVisLab:
+We used a second approach for segmenting the lungs from the CT scans which is the more conventional approach of using region growing, in order to compare the results of our FCN with the current `standard'. The biggest challenge of this approach is that in order to traditionally use region growing for segmentation, seed points need to be automatically selected inside the area that needs to be segmented. Since this is a difficult task, the decision is made to circumvent this problem by using region growing in a different way. The following algorithm is used for segmentation in MeVisLab:
 
 \begin{itemize}
 \item Threshold the image with threshold value 1000.
 \item Apply region growing to the image, four times, with a corner pixel of the first slice as seed point.
 \item Add the resulting four images to the thresholded image.
-\item Threshold the resulting image with value 1000. An exmaple result can be seen in figure \ref{fig:reg-gro}.
+\item Threshold the resulting image with value 1000. An example result can be seen in figure \ref{fig:reg-gro}.
 \item Invert the resulting image. All that is left are the lungs and some other artifacts. An example can be seen in figure \ref{fig:lung-meuk}.
 \item Do a connected components analysis on the resulting image, and select only the largest component from the image (the lungs).
 \item Since there are still black holes in the lungs (veins), closing is applied to the image with a 10x10x1 spherical kernel. An example of the resulting segmentation mask can be seen in figure \ref{fig:lungs}.
 \end{itemize}
 
-
-This approach circumvents the need to find specific region growing seed points, since we take the same seed points for each image, namely the four corner pixels of the first slice. The results gathered with this method seem fairly promosing. More on the results of using this segmentation method is discussed in the results section
+\noindent This approach circumvents the need to find specific region growing seed points, since we take the same seed points for each image, namely the four corner pixels of the first slice. The results gathered with this method seem fairly promising. More on the results of using this segmentation method is discussed in the section \ref{sec:results}.
 
 
 \section{Results}
+\label{sec:results}
 
 \section{Conclusion}
 
+\appendix
 \section{Contributions}
 
-Luc Nies:
+\textbf{Luc Nies:}
+\\
+\textbf{Steven Reitsma:}
+\\
+\textbf{Harmen Prins:}
+\\
+\textbf{Inez Wijnands:} Contributed to the initial implementation of the fully convolutional network. Contributed to creating the MeVisLab segmentation method. Implemented the evaluation method for the segmentations (Dice score).\\
+\\
+\textbf{Tom van de Poll:} Contributed to the initial implementation of the fully convolutional network. Contributed to creating the MeVisLab segmentation method and responsible for troubleshooting this method. Implemented the method for looping the MeVisLab segmentation method over the data.
 
-Steven Reitsma:
-
-Harmen Prins:
-
-Inez Wijnands:
-
-Tom van de Poll: Contributed to the initial implementation of the fully convolutional network. Contributed to creating the MeVisLab segmentation method and responsible for troubleshooting this method. Implemented the method for looping the MeVisLab segmentation method over the data.\\
-
-\section{appendix}
+\section{Figures}
 \begin{figure}[h]
 	\centering
 	\includegraphics[scale=0.7]{regiongrowing}
@@ -144,24 +145,24 @@ Tom van de Poll: Contributed to the initial implementation of the fully convolut
     \label{fig:reg-gro}
 \end{figure}
 
-
 \begin{figure}[h]
     ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
       %(or a blank line to force the subfigure onto a new line)
     \begin{subfigure}[b]{0.45\textwidth}
         \includegraphics[width=\textwidth]{lungs_with_meuk}
-        \caption{The image after the inversion step.}
+        \caption{After the inversion step.}
         \label{fig:lung-meuk}
     \end{subfigure}
     ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
     %(or a blank line to force the subfigure onto a new line)
     \begin{subfigure}[b]{0.45\textwidth}
         \includegraphics[width=\textwidth]{lungs_without_meuk}
-        \caption{The result of the segmentation.}
+        \caption{After connected component analysis and closing.}
         \label{fig:lungs}
     \end{subfigure}
-    \caption{}\label{fig:lung-segmentation}
+    \caption{Results of the segmentation}\label{fig:lung-segmentation}
 \end{figure}
+
 
 \bibliographystyle{amsplain}
 \bibliography{references}
