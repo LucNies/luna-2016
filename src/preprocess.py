@@ -13,9 +13,9 @@ import math
 import pickle
 
 VERSION = 1
-subsets = range(1) # not subset9, use that as testset
 
-def preprocess(file_path = 'D:/data/subset'):
+
+def preprocess(file_path = 'D:/data/subset', outpath = 'image_stats.stats', subsets = range(8)):
     
 
 
@@ -42,7 +42,7 @@ def preprocess(file_path = 'D:/data/subset'):
     metadata['n_samples'] = len(full_names)
     metadata['file_names'] = full_names
     metadata['n_slices'] = n_slices
-    with open('image_stats.stat', 'wb') as write:
+    with open(outpath, 'wb') as write:
         pickle.dump(metadata, write)
     print 'done saving'
 
@@ -79,4 +79,4 @@ def get_subject_name(file_name):
     
 
 if __name__ == '__main__' :
-    preprocess()
+    preprocess(outpath = 'validation_set.stats', subsets = [8])
