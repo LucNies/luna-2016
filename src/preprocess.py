@@ -9,13 +9,12 @@ from tqdm import tqdm
 import numpy as np
 import os
 import SimpleITK as sitk
-import math
 import pickle
 
-VERSION = 1
-subsets = range(1) # not subset9, use that as testset
+VERSION = 2
+subsets = range(9) # not subset9, use that as testset
 
-def preprocess(file_path = 'D:/data/subset'):
+def preprocess(file_path = 'F:/Temp/CAD/data/subset'):
     
 
 
@@ -62,13 +61,13 @@ def calc_stat(file_names):
     for file_name in tqdm(file_names):
         image = sitk.GetArrayFromImage(sitk.ReadImage(file_name)) 
         n_slices += image.shape[0]
-        mean = image.mean()
+        mean = image.mean(axis=0)
         n += 1
         delta =  mean - total_mean
         mean += delta/n
         M2 += delta*(mean - total_mean)
     
-    return mean, math.sqrt(M2/(n-1)), n_slices
+    return mean, np.sqrt(M2/(n-1)), n_slices
 
 
 def get_subject_name(file_name):
