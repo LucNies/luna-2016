@@ -17,10 +17,16 @@ import time
 import cPickle as pickle
 import read_data
 from tqdm import tqdm
+import getpass
 
-dataset_dir = "../data/"
-input_path = "D:/data/subset7/"
-target_path = "D:/data/seg-lungs-LUNA16/seg-lungs-LUNA16/"
+if getpass.getuser() == 'harmen':
+    dataset_dir = "../data/"
+    input_path = "../data/subset0/"
+    target_path = "../data/seg-lungs-LUNA16/seg-lungs-LUNA16/"
+else:
+    dataset_dir = "../data/"
+    input_path = "D:/data/subset7/"
+    target_path = "D:/data/seg-lungs-LUNA16/seg-lungs-LUNA16/"
 
 #inputs = os.listdir(input_path)
 
@@ -99,7 +105,10 @@ def create_network():
     
     network = output
     return inputs, targets, network
-    
+
+
+
+
 
 
 def training(inputs, targets, network, train_X, train_Y, val_X, val_Y):
@@ -152,6 +161,7 @@ if __name__ == '__main__':
 
     inputs, targets, network = create_network()
     training(inputs, targets, network, 0, 0, 0, 0)
+
 
     
     

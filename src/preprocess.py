@@ -15,17 +15,15 @@ VERSION = 2
 subsets = range(9) # not subset9, use that as testset
 
 def preprocess(file_path = 'F:/Temp/CAD/data/subset'):
-    
-
-
-    
     full_names = []
-    print 'Creating file list'    
+    print 'Creating file list'
+    print 'Processing {} subsets, is this ok?'.format(len(subsets))
     for i in subsets:
-        full_path = file_path + str(i) + '/'
-        file_names = os.listdir(full_path) 
+        full_path = file_path + str(i)
+        file_names = os.listdir(full_path)
+        file_names = [fn for fn in file_names if ".mhd" in fn]
         for name in file_names[0::2]:
-           full_names.append(full_path + name)
+           full_names.append(os.path.join(full_path, name))
 
     print 'Done, {} filenames found'.format(len(full_names))
     
@@ -59,7 +57,8 @@ def calc_stat(file_names):
     n_slices = 0
     
     for file_name in tqdm(file_names):
-        image = sitk.GetArrayFromImage(sitk.ReadImage(file_name)) 
+        full_name = os.path.abspath(file_name)
+        image = sitk.GetArrayFromImage(sitk.ReadImage(full_name))
         n_slices += image.shape[0]
         mean = image.mean(axis=0)
         n += 1
@@ -78,4 +77,4 @@ def get_subject_name(file_name):
     
 
 if __name__ == '__main__' :
-    preprocess()
+    preprocess(os.path.join("..", "data", "subset"))
