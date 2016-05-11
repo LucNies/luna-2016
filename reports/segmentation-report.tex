@@ -99,6 +99,9 @@ bindingoffset=0mm, top=20mm,bottom=20mm}
 \maketitle
 
 \section{Problem description}
+The goal of the \textit{LUng Nodule Analysis 2016} (\textit{LUNA16}) challenge is to detect lung nodules in low-dose lung CT images. To be able to detect lung nodule candidates, we first have to segment the lungs from the CT images. The data set consists of 888 low-dose CT images, all with corresponding segmentations that can be used as a ground truth. Each image has slices of 512 $\times$ 512 pixels and the amount of slices varies per subject.
+
+We used two different approaches. Firstly, we used a deep learning approach using a fully convolutional network, to classify the pixels of the image as either `lung' or `no lung'. Secondly, we took a traditional approach where we use region growing for segmentation. These approaches and our results are explained more detailed in the following sections.
 
 \section{Fully convolutional network}
 
@@ -144,23 +147,26 @@ We used subset 9 as the test set. This subset contains 88 subjects in total. We 
 \section{Conclusion}
 Even though we didn't manage to get our fully convolutional network to work, we still achieved very nice results with the region growing. Even though most of the segmentations were close to perfect (with a dice higher than 0.) An obvious step of improvement would be noise removal, as the algorithm fails completely on the noisy images. Could definitely improve our performance as if we calculate our mean and std dices score on our test set without the noisy images, we would achieve a mean of 0.977 and a std of 0.011.
 
+\clearpage
+
 \appendix
 \section{Contributions}
 
-\textbf{Luc Nies:} Mostly worked on the fully convolutional and made the basic pipeline. Ran the region growing algorithm on the test set and wrote the results and conclusion section.
+\textbf{Luc Nies:} Mostly worked on the fully convolutional and made the basic pipeline. Ran the region growing algorithm on the test set and wrote the results and conclusion section.\\
 \\
-\textbf{Steven Reitsma:} Looked into implementing U-net. Afterwards assisted in getting the fully convolutional network to train. Wrote report section on fully convolutional networks.
+\textbf{Steven Reitsma:} Looked into implementing U-net. Afterwards assisted in getting the fully convolutional network to train. Wrote report section on fully convolutional networks.\\
 \\
 \textbf{Harmen Prins:} Looked into implementing U-net. Implemented shift-and-stitch. Wrote report section on shift-and-stitch.
 \\
-\textbf{Inez Wijnands:} Contributed to the initial implementation of the fully convolutional network. Contributed to creating the MeVisLab segmentation method. Implemented the evaluation method for the segmentations (Dice score).\\
+\textbf{Inez Wijnands:} Contributed to the initial implementation of the fully convolutional network. Contributed to creating the MeVisLab segmentation method. Implemented the evaluation method for the segmentations (Dice score). Created template and structure of report, wrote introduction section and made editorial revisions.\\
 \\
-\textbf{Tom van de Poll:} Contributed to the initial implementation of the fully convolutional network. Contributed to creating the MeVisLab segmentation method and responsible for troubleshooting this method. Implemented the method for looping the MeVisLab segmentation method over the data.
+\textbf{Tom van de Poll:} Contributed to the initial implementation of the fully convolutional network. Contributed to creating the MeVisLab segmentation method and responsible for troubleshooting this method. Implemented the method for looping the MeVisLab segmentation method over the data. Wrote report section on region growing.
 
 \section{Figures}
+
 \begin{figure}[h]
 	\centering
-	\includegraphics[scale=0.7]{regiongrowing}
+	\includegraphics[width=\textwidth]{regiongrowing}
     \caption{The thresholded image after region growing.}
     \label{fig:reg-gro}
 \end{figure}
@@ -169,14 +175,14 @@ Even though we didn't manage to get our fully convolutional network to work, we 
     ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
       %(or a blank line to force the subfigure onto a new line)
     \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{lungs_with_meuk}
+        \includegraphics[width=0.95\textwidth]{lungs_with_meuk}
         \caption{After the inversion step.}
         \label{fig:lung-meuk}
     \end{subfigure}
     ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
     %(or a blank line to force the subfigure onto a new line)
     \begin{subfigure}[b]{0.45\textwidth}
-        \includegraphics[width=\textwidth]{lungs_without_meuk}
+        \includegraphics[width=0.95\textwidth]{lungs_without_meuk}
         \caption{After connected component analysis and closing.}
         \label{fig:lungs}
     \end{subfigure}
