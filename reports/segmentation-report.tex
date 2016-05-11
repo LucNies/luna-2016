@@ -99,7 +99,9 @@ bindingoffset=0mm, top=20mm,bottom=20mm}
 \maketitle
 
 \section{Problem description}
-The goal of the \textit{LUng Nodule Analysis 2016} (\textit{LUNA16}) challenge is to detect lung nodules in low-dose lung CT images. To be able to detect lung nodule candidates, we first have to segment the lungs from the CT images. We used two different approaches. Firstly, we used a deep learning approach using a fully convolutional network, to classify the pixels of the image as either `lung' or `no lung'. Secondly, we took a traditional approach where we use region growing for segmentation. These approaches and our results are explained more detailed in the following sections.
+The goal of the \textit{LUng Nodule Analysis 2016} (\textit{LUNA16}) challenge is to detect lung nodules in low-dose lung CT images. To be able to detect lung nodule candidates, we first have to segment the lungs from the CT images. The data set consists of 888 low-dose CT images, all with corresponding segmentations that can be used as a ground truth. Each image has slices of 512 $\times$ 512 pixels and the amount of slices varies per subject.
+
+We used two different approaches. Firstly, we used a deep learning approach using a fully convolutional network, to classify the pixels of the image as either `lung' or `no lung'. Secondly, we took a traditional approach where we use region growing for segmentation. These approaches and our results are explained more detailed in the following sections.
 
 \section{Fully convolutional network}
 
