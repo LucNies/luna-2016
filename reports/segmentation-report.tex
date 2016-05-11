@@ -142,12 +142,12 @@ We used a second approach for segmenting the lungs from the CT scans which is th
 We used subset 9 as the test set. This subset contains 88 subjects in total. We achieved a mean dice score of 0.955, with an std of 0.150. A closer inspection of the results revealed that two subjects were very badly segmented, resulting in a dice score of 0.000. These bad segmentations were the result of a very noisy image, as shown in figure \ref{fig:noisy}. The third lowest image had a dice of 0.889, the rest of the images had a dice of 0.970 or higher. 
 
 \section{Conclusion}
-Even though we didn't manage to get our fully convolutional network to work, we still achieved very nice results with the region growing. Even though most of the segmentations were close to perfect (with a dice higher than 0.)
+Even though we didn't manage to get our fully convolutional network to work, we still achieved very nice results with the region growing. Even though most of the segmentations were close to perfect (with a dice higher than 0.) An obvious step of improvement would be noise removal, as the algorithm fails completely on the noisy images. Could definitely improve our performance as if we calculate our mean and std dices score on our test set without the noisy images, we would achieve a mean of 0.977 and a std of 0.011.
 
 \appendix
 \section{Contributions}
 
-\textbf{Luc Nies:}
+\textbf{Luc Nies:} Mostly worked on the fully convolutional and made the basic pipeline. Ran the region growing algorithm on the test set and wrote the results and conclusion section.
 \\
 \textbf{Steven Reitsma:} Looked into implementing U-net. Afterwards assisted in getting the fully convolutional network to train. Wrote report section on fully convolutional networks.
 \\
