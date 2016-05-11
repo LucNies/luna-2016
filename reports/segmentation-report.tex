@@ -139,8 +139,10 @@ We used a second approach for segmenting the lungs from the CT scans which is th
 
 \section{Results}
 \label{sec:results}
+We used subset 9 as the test set. This subset contains 88 subjects in total. We achieved a mean dice score of 0.955, with an std of 0.150. A closer inspection of the results revealed that two subjects were very badly segmented, resulting in a dice score of 0.000. These bad segmentations were the result of a very noisy image, as shown in figure \ref{fig:noisy}. The third lowest image had a dice of 0.889, the rest of the images had a dice of 0.970 or higher. 
 
 \section{Conclusion}
+Even though we didn't manage to get our fully convolutional network to work, we still achieved very nice results with the region growing. Even though most of the segmentations were close to perfect (with a dice higher than 0.)
 
 \appendix
 \section{Contributions}
@@ -179,6 +181,13 @@ We used a second approach for segmenting the lungs from the CT scans which is th
         \label{fig:lungs}
     \end{subfigure}
     \caption{Results of the segmentation}\label{fig:lung-segmentation}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.7]{Noisy_and_clean}
+	\caption{Clean image on the left, noisy image on the right}
+	\label{fig:noisy}
 \end{figure}
 
 
