@@ -101,10 +101,26 @@ bindingoffset=0mm, top=20mm,bottom=20mm}
 \section{Problem description}
 
 \section{Fully convolutional network}
-Paper by Long et al \cite{long2015fully}
+
+Since deep learning for image classification has emerged as an extremely successful method, other applications have been explored.
+One of these applications is image segmentation.
+Long et al. \cite{long2015fully} propose a relatively simple method for using a convolutional neural network for image segmentation.
+One of the challenges is that the output `label' of the classification is not a simple scalar label but is of the same dimensions as the input.
+Another challenge is that the process of pixel-by-pixel classification is too slow for big datasets such as the one we are using.
+Long et al. \cite{long2015fully} overcome both challenges with their method of using fully-convolutional networks for image segmentation.
+
+During training time, we use 64x64 pixel patches that are extracted from slices in the horizontal plane of the image.
+We assign a single label to the patch, defined by the class of the center pixel of the batch (either 0 for background or 1 for lung).
+The network is fully-convolutional. This means that no fully-connected layers are used, only convolutional and pooling layers.
+This is done so that images of various sizes can be used as input of the network.
+If an image is inputed that has a size larger than 64x64 pixels, the result from the final layer in the network will be multidimensional in the spatial dimensions instead of a single label prediction.
+This means that we can use our complete to-be-segmented image as the input of the trained network and the result will be a downsampled segmentation mask.
+Of course, we need a normal-sized segmentation mask instead of a downsampled one.
+To overcome the downsampling we use the shift-and-stitch method, also proposed by Long et al. \cite{long2015fully}.
+---- HARMEN SHIFT N STITCH ----
 
 \section{Region growing in MeVisLab}
-We used a second approach for segmenting the lungs from the CT scans which is the more conventional approach of using region growing, in order to compare the results of our FCN with the current `standard'. The biggest challenge of this approach is that in order to traditionally use region growing for segmentation, seed points need to be automatically selected inside the area that needs to be segmented. Since this is a difficult task, the decision is made to circumvent this problem by using region growing in a different way. The following algorithm is used for segmentation in MeVisLab:
+We used a second approach for segmenting the lungs from the CT scans which is the more conventional approach of using region growing, in order to compare the results of our FCN with the current `standard'. The biggest challenge of this approach is that in order to use region growing for segmentation, seed points need to be automatically selected inside the area that needs to be segmented. Since this is a difficult task, we circumvent this problem by using region growing in a different way. The following algorithm is used for segmentation:
 
 \begin{itemize}
 \item Threshold the image with threshold value 1000.
@@ -129,7 +145,7 @@ We used a second approach for segmenting the lungs from the CT scans which is th
 
 \textbf{Luc Nies:}
 \\
-\textbf{Steven Reitsma:}
+\textbf{Steven Reitsma:} Looked into implementing U-net. Afterwards assisted in getting the fully convolutional network to train. Wrote report section on fully convolutional networks.
 \\
 \textbf{Harmen Prins:}
 \\
