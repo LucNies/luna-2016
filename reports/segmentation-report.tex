@@ -102,7 +102,7 @@ bindingoffset=0mm, top=20mm,bottom=20mm}
 
 \section{Fully convolutional network}
 
-Since deep learning for image classification has emerged as an extremely successful method, other applications have been explored.
+Since deep learning for image classification has emerged as an extremely successful method, other applications for deep learning have been explored.
 One of these applications is image segmentation.
 Long et al. \cite{long2015fully} propose a relatively simple method for using a convolutional neural network for image segmentation.
 One of the challenges is that the output `label' of the classification is not a simple scalar label but is of the same dimensions as the input.
@@ -119,7 +119,7 @@ Of course, we need a normal-sized segmentation mask instead of a downsampled one
 To overcome the downsampling we use the shift-and-stitch method, also proposed by Long et al. \cite{long2015fully}.
 ---- HARMEN SHIFT N STITCH ----
 
-Currently we have no results yet for the fully convolutional network as we are still in the development phase. However, the fully convolutional network can also be used for the next phase of the LUNA challenge (nodule candidate detection). We are therefore continuing the development of this method and are confident that we will get it to work soon.
+Currently we have no results yet for the fully convolutional network as we are still in the development phase. However, the fully convolutional network can also be used for the next phase of the LUNA challenge (nodule candidate detection), by viewing is as a segmentation problem (we're trying to segment the candidates from the rest of the image). We are therefore continuing the development of this method and are confident that we will get it to work soon.
 
 \section{Region growing in MeVisLab}
 We used a second approach for segmenting the lungs from the CT scans which is the more conventional approach of using region growing, in order to compare the results of our FCN with the current `standard'. The biggest challenge of this approach is that in order to use region growing for segmentation, seed points need to be automatically selected inside the area that needs to be segmented. Since this is a difficult task, we circumvent this problem by using region growing in a different way. The following algorithm is used for segmentation:
