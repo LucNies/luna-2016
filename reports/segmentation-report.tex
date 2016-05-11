@@ -113,16 +113,16 @@ Another challenge is that the process of pixel-by-pixel classification is too sl
 Long et al. \cite{long2015fully} overcome both challenges with their method of using fully-convolutional networks for image segmentation.
 
 During training time, we use 64x64 pixel patches that are extracted from slices in the horizontal plane of the image.
-We assign a single label to the patch, defined by the class of the center pixel of the batch (either 0 for background or 1 for lung).
+We assign a single label to the patch, defined by the class of the center pixel of the batch (either 0 for `background' or 1 for `lung').
 The network is fully-convolutional. This means that no fully-connected layers are used, only convolutional and pooling layers.
 This is done so that images of various sizes can be used as input of the network.
-If an image is inputed that has a size larger than 64x64 pixels, the result from the final layer in the network will be multidimensional in the spatial dimensions instead of a single label prediction.
+If an image is inputed that has a size larger than 64 $\times$ 64 pixels, the result from the final layer in the network will be multidimensional in the spatial dimensions instead of a single label prediction.
 This means that we can use our complete to-be-segmented image as the input of the trained network and the result will be a downsampled segmentation mask.
 Of course, we need a normal-sized segmentation mask instead of a downsampled one.
-To overcome the downsampling we use the shift-and-stitch method, also proposed by Long et al. \cite{long2015fully}. The shift-and-stitch method performs two steps to upsample. First, it generates multiple outputs (by shifting), and then combines them into one larger output (by stitching). The shifting step generates a new output by shifting all pixels in the image one pixel to the right or down. This shift is applied $n*m$ times where $n$ and $m$ are the ratio of the output to the target width and height respectively.
-When stitching the outputs together, the outputs are interleaved such that the pixels of the outputs are shifted in the same way as in the shifting step. So the first row of the output looks like this: $output_1.pixel_1$, $output_2.pixel_1$ ... $output_1.pixel_2$ ... $output_n.pixel_N$. This interleaving ensures that the pixels of the output correspond to the original pixels of the image.
+To overcome the downsampling we use the shift-and-stitch method, also proposed by Long et al. \cite{long2015fully}. The shift-and-stitch method performs two steps to upsample. First, it generates multiple outputs (by shifting), and then combines them into one larger output (by stitching). The shifting step generates a new output by shifting all pixels in the image one pixel to the right or down. This shift is applied $n \times m$ times where $n$ and $m$ are the ratio of the output to the target width and height respectively.
+When stitching the outputs together, the outputs are interleaved such that the pixels of the outputs are shifted in the same way as in the shifting step. So the first row of the output looks like this: \textit{output}$_1$.\textit{pixel}$_1$, \textit{output}$_2$.\textit{pixel}$_1$, $\hdots$, \textit{output}$_1$.\textit{pixel}$_2$, $\hdots$, \textit{output}$_n$.\textit{pixel}$_N$. This interleaving ensures that the pixels of the output correspond to the original pixels of the image.
 
-Currently we have no results yet for the fully convolutional network as we are still in the development phase. However, the fully convolutional network can also be used for the next phase of the LUNA challenge (nodule candidate detection), by viewing is as a segmentation problem (we're trying to segment the candidates from the rest of the image). We are therefore continuing the development of this method and are confident that we will get it to work soon.
+Currently we have no results yet for the fully convolutional network as we are still in the development phase. However, the fully convolutional network can also be used for the next phase of the \textit{LUNA16} challenge (nodule candidate detection), by viewing it as a segmentation problem (we are trying to segment the candidates from the rest of the image). We are therefore continuing the development of this method and are confident that we will get it to work soon.
 
 \section{Region growing in MeVisLab}
 We used a second approach for segmenting the lungs from the CT scans which is the more conventional approach of using region growing, in order to compare the results of our FCN with the current `standard'. The biggest challenge of this approach is that in order to use region growing for segmentation, seed points need to be automatically selected inside the area that needs to be segmented. Since this is a difficult task, we circumvent this problem by using region growing in a different way. The following algorithm is used for segmentation:
@@ -142,10 +142,10 @@ We used a second approach for segmenting the lungs from the CT scans which is th
 
 \section{Results}
 \label{sec:results}
-We used subset 9 as the test set. This subset contains 88 subjects in total. We achieved a mean dice score of 0.955, with an std of 0.150. A closer inspection of the results revealed that two subjects were very badly segmented, resulting in a dice score of 0.000. These bad segmentations were the result of a very noisy image, as shown in figure \ref{fig:noisy}. The third lowest image had a dice of 0.889, the rest of the images had a dice of 0.970 or higher. 
+Since our deep learning method is unfinished, the following results are obtained using the region growing method. We used subset 9 of the data set as our test set. This subset contains 88 subjects in total. We achieved a mean Dice score of 0.955 with a standard deviation of 0.150. A closer inspection of the results revealed that two subjects were very badly segmented, resulting in a Dice score of 0.000. These bad segmentations were the result of a very noisy image, as shown in figure \ref{fig:noisy}. The third lowest image had a Dice score of 0.889, the rest of the images had a Dice score of 0.970 or higher. 
 
 \section{Conclusion}
-Even though we didn't manage to get our fully convolutional network to work, we still achieved very nice results with the region growing. Even though most of the segmentations were close to perfect (with a dice higher than 0.) An obvious step of improvement would be noise removal, as the algorithm fails completely on the noisy images. Could definitely improve our performance as if we calculate our mean and std dices score on our test set without the noisy images, we would achieve a mean of 0.977 and a std of 0.011.
+Unfortunately we did not manage to get our fully convolutional network to work in time, but we still achieved good results with the conventional region growing approach and showed that this method is a nice standard to compare other approaches with. Most of the segmentations using region growing were close to perfect (with a Dice score higher than 0.97), however an obvious step of improvement would be noise removal since the algorithm fails completely on noisy images. We could definitely improve our performance. If we calculate our mean and variance of the Dice scores on our test set without the noisy images, we would achieve a mean of 0.977 and a standard deviation of 0.011. Thus if we could correctly segment the noisy images, this could be a promising improvement on our current scores.
 
 \clearpage
 
@@ -156,7 +156,7 @@ Even though we didn't manage to get our fully convolutional network to work, we 
 \\
 \textbf{Steven Reitsma:} Looked into implementing U-net. Afterwards assisted in getting the fully convolutional network to train. Wrote report section on fully convolutional networks.\\
 \\
-\textbf{Harmen Prins:} Looked into implementing U-net. Implemented shift-and-stitch. Wrote report section on shift-and-stitch.
+\textbf{Harmen Prins:} Looked into implementing U-net. Implemented shift-and-stitch. Wrote report section on shift-and-stitch.\\
 \\
 \textbf{Inez Wijnands:} Contributed to the initial implementation of the fully convolutional network. Contributed to creating the MeVisLab segmentation method. Implemented the evaluation method for the segmentations (Dice score). Created template and structure of report, wrote introduction section and made editorial revisions.\\
 \\
@@ -172,16 +172,17 @@ Even though we didn't manage to get our fully convolutional network to work, we 
 \end{figure}
 
 \begin{figure}[h]
+	\centering
     ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
       %(or a blank line to force the subfigure onto a new line)
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}[b]{0.42\textwidth}
         \includegraphics[width=0.95\textwidth]{lungs_with_meuk}
         \caption{After the inversion step.}
         \label{fig:lung-meuk}
     \end{subfigure}
     ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc. 
     %(or a blank line to force the subfigure onto a new line)
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}[b]{0.42\textwidth}
         \includegraphics[width=0.95\textwidth]{lungs_without_meuk}
         \caption{After connected component analysis and closing.}
         \label{fig:lungs}
@@ -191,7 +192,7 @@ Even though we didn't manage to get our fully convolutional network to work, we 
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[scale=0.7]{Noisy_and_clean}
+	\includegraphics[scale=0.6]{Noisy_and_clean}
 	\caption{Clean image on the left, noisy image on the right}
 	\label{fig:noisy}
 \end{figure}
