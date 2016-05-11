@@ -119,6 +119,8 @@ Of course, we need a normal-sized segmentation mask instead of a downsampled one
 To overcome the downsampling we use the shift-and-stitch method, also proposed by Long et al. \cite{long2015fully}.
 ---- HARMEN SHIFT N STITCH ----
 
+Currently we have no results yet for the fully convolutional network as we are still in the development phase. However, the fully convolutional network can also be used for the next phase of the LUNA challenge (nodule candidate detection). We are therefore continuing the development of this method and are confident that we will get it to work soon.
+
 \section{Region growing in MeVisLab}
 We used a second approach for segmenting the lungs from the CT scans which is the more conventional approach of using region growing, in order to compare the results of our FCN with the current `standard'. The biggest challenge of this approach is that in order to use region growing for segmentation, seed points need to be automatically selected inside the area that needs to be segmented. Since this is a difficult task, we circumvent this problem by using region growing in a different way. The following algorithm is used for segmentation:
 
