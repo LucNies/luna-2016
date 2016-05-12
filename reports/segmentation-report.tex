@@ -128,7 +128,7 @@ Currently we have no results yet for the fully convolutional network as we are s
 We used a second approach for segmenting the lungs from the CT scans which is the more conventional approach of using region growing, in order to compare the results of our FCN with the current `standard'. The biggest challenge of this approach is that in order to use region growing for segmentation, seed points need to be automatically selected inside the area that needs to be segmented. Since this is a difficult task, we circumvent this problem by using region growing in a different way. The following algorithm is used for segmentation:
 
 \begin{itemize}
-\item Threshold the image with threshold value 1000.
+\item Threshold the image with threshold value -350.
 \item Apply region growing to the image, four times, with a corner pixel of the first slice as seed point.
 \item Add the resulting four images to the thresholded image.
 \item Threshold the resulting image with value 1000. An example result can be seen in figure \ref{fig:reg-gro}.
