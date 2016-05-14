@@ -9,24 +9,21 @@ from tqdm import tqdm
 import numpy as np
 import os
 import SimpleITK as sitk
-import math
 import pickle
 
-VERSION = 1
+VERSION = 2
+subsets = range(9) # not subset9, use that as testset
 
-
-def preprocess(file_path = 'D:/data/subset', outpath = 'image_stats.stats', subsets = range(8)):
-    
-
-
-    
+def preprocess(file_path = 'D:/data/subset):
     full_names = []
-    print 'Creating file list'    
+    print 'Creating file list'
+    print 'Processing {} subsets, is this ok?'.format(len(subsets))
     for i in subsets:
-        full_path = file_path + str(i) + '/'
-        file_names = os.listdir(full_path) 
+        full_path = file_path + str(i)
+        file_names = os.listdir(full_path)
+        file_names = [fn for fn in file_names if ".mhd" in fn]
         for name in file_names[0::2]:
-           full_names.append(full_path + name)
+           full_names.append(os.path.join(full_path, name))
 
     print 'Done, {} filenames found'.format(len(full_names))
     
@@ -42,7 +39,7 @@ def preprocess(file_path = 'D:/data/subset', outpath = 'image_stats.stats', subs
     metadata['n_samples'] = len(full_names)
     metadata['file_names'] = full_names
     metadata['n_slices'] = n_slices
-    with open(outpath, 'wb') as write:
+    with open('image_stats.stat', 'wb') as write:
         pickle.dump(metadata, write)
     print 'done saving'
 
@@ -60,15 +57,16 @@ def calc_stat(file_names):
     n_slices = 0
     
     for file_name in tqdm(file_names):
-        image = sitk.GetArrayFromImage(sitk.ReadImage(file_name)) 
+        full_name = os.path.abspath(file_name)
+        image = sitk.GetArrayFromImage(sitk.ReadImage(full_name))
         n_slices += image.shape[0]
-        mean = image.mean()
+        mean = image.mean(axis=0)
         n += 1
         delta =  mean - total_mean
         mean += delta/n
         M2 += delta*(mean - total_mean)
     
-    return mean, math.sqrt(M2/(n-1)), n_slices
+    return mean, np.sqrt(M2/(n-1)), n_slices
 
 
 def get_subject_name(file_name):
@@ -79,4 +77,8 @@ def get_subject_name(file_name):
     
 
 if __name__ == '__main__' :
+<<<<<<< HEAD
     preprocess(outpath = 'validation_set.stats', subsets = [8])
+=======
+    preprocess(os.path.join("..", "data", "subset"))
+>>>>>>> eee58529fa4d1d66175b1b52e541fc715a7d363d

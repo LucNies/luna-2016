@@ -16,16 +16,25 @@ import matplotlib.pyplot as plt
 import util
 import preprocess
 import pickle
+<<<<<<< HEAD
 from sklearn.feature_extraction.image import extract_patches_2d
 
 patch_size = 64
+=======
+import getpass
+>>>>>>> eee58529fa4d1d66175b1b52e541fc715a7d363d
 
+if getpass.getuser() == 'harmen':
+    lbl_path = os.path.join("..", "data", "seg-lungs-LUNA16")
+else:
+    lbl_path = 'D:/data/seg-lungs-LUNA16/'
 
 class Reader:
     """
     Batch_size is currently unused! Returns all the slices of one subject atm
     """
-    def __init__(self, batch_size = 100, shuffle = True, meta_data = 'image_stats.stat', label_path = 'D:/data/seg-lungs-LUNA16/'):
+    def __init__(self, batch_size = 100, shuffle = True, meta_data = 'image_stats.stat', label_path = lbl_path, patch_shape = (64,64)):
+        
         if not os.path.isfile(meta_data):
             preprocess.preprocess()
         
@@ -42,42 +51,36 @@ class Reader:
         self.label_path = label_path
         self.current = 0
         self.shuffle = shuffle
-        
+        self.patch_shape = patch_shape
+
     def __iter__(self):
         return self
-    
+
     def next(self):
         if self.current >self.n_samples-1:
             raise StopIteration
         else:
-            image_location = self.file_names[self.current]
-            split = image_location.split('/')
-            label_location = self.label_path + split[len(split)-1]
-            batch, labels = load_itk_images(image_location, label_location) 
+            batch, labels = load_itk_images(*self.get_locations())
             batch = batch - self.mean
             labels = labels >= 3
 
             n_patches = 2
 
-            patch_batch = np.zeros((n_patches*len(batch), 1, 64, 64), dtype=np.float32)
+            patch_batch = np.zeros((n_patches*len(batch), 1,) + self.patch_shape, dtype=np.float32)
             patch_labels = np.zeros((n_patches*len(batch), 2), dtype=np.float32)
             
-            
-            image_patches, image_labels = patch(batch[60], labels[60], 1000)
+            for i in range(len(batch)):
+                image_patches, image_labels = self.patch(batch[i], labels[i], n_patches)
+                patch_batch[i*n_patches:i*n_patches+n_patches] = image_patches
+                patch_labels[i*n_patches:i*n_patches+n_patches] = image_labels
 
-#            for i in range(len(batch)):
-#                image_patches, image_labels = patch(batch[i], labels[i], n_patches)
-#                patch_batch[i*n_patches:i*n_patches+n_patches] = image_patches
-#                patch_labels[i*n_patches:i*n_patches+n_patches] = image_labels
             
             
             self.current+=1
             return patch_batch, patch_labels
 
-def patch(image, labels, n_patches=1000):
-    # image: (1, 1, 512, 512)
-    # label: (1, 1, 512, 512)
 
+def patch(self, image, labels, n_patches):
     # output:
     # image: (n_patches, 1, 64, 64)
     # label: (n_patches)
