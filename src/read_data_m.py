@@ -16,18 +16,16 @@ import matplotlib.pyplot as plt
 import util
 import preprocess
 import pickle
-<<<<<<< HEAD
-from sklearn.feature_extraction.image import extract_patches_2d
-
-patch_size = 64
-=======
 import getpass
->>>>>>> eee58529fa4d1d66175b1b52e541fc715a7d363d
+import time
+
 
 if getpass.getuser() == 'harmen':
     lbl_path = os.path.join("..", "data", "seg-lungs-LUNA16")
 else:
     lbl_path = 'D:/data/seg-lungs-LUNA16/'
+
+patch_size = 64
 
 class Reader:
     """
@@ -38,7 +36,7 @@ class Reader:
         if not os.path.isfile(meta_data):
             preprocess.preprocess()
         
-        with open('image_stats.stat', 'rb') as read:
+        with open(meta_data, 'rb') as read:
             meta_data = pickle.load(read)
     
         self.mean = meta_data['mean']
@@ -60,6 +58,8 @@ class Reader:
         if self.current >self.n_samples-1:
             raise StopIteration
         else:
+
+            begin = time.time()
             batch, labels = load_itk_images(*self.get_locations())
             batch = batch - self.mean
             labels = labels >= 3
@@ -68,63 +68,72 @@ class Reader:
 
             patch_batch = np.zeros((n_patches*len(batch), 1,) + self.patch_shape, dtype=np.float32)
             patch_labels = np.zeros((n_patches*len(batch), 2), dtype=np.float32)
+
+            #self.patch(batch[60], labels[60], 1000)
+            
             
             for i in range(len(batch)):
                 image_patches, image_labels = self.patch(batch[i], labels[i], n_patches)
                 patch_batch[i*n_patches:i*n_patches+n_patches] = image_patches
                 patch_labels[i*n_patches:i*n_patches+n_patches] = image_labels
-
+              
             
             
             self.current+=1
+
             return patch_batch, patch_labels
 
 
-def patch(self, image, labels, n_patches):
-    # output:
-    # image: (n_patches, 1, 64, 64)
-    # label: (n_patches)
+    def patch(self, image, labels, n_patches):
+        # output:
+        # image: (n_patches, 1, 64, 64)
+        # label: (n_patches)
+              
     
-    
-
-    patches = np.zeros((n_patches, 1, 64, 64), dtype=np.float32)
-    patch_labels = np.zeros((n_patches, 2), dtype = np.float32)
-    
-    n_possible = (image.shape[0]-patch_size+1)*(image.shape[1]-patch_size+1)
-
-    all_labels = np.zeros((n_possible), dtype=np.float32)
-    
-    #Get all lables in range
-    i = 0
-    for x in range(image.shape[0]-patch_size+1):
-        for y in range(image.shape[0]-patch_size+1):
-            all_labels[i] = labels[y+patch_size/2, x+patch_size/2]
-            i += 1
-            
-    #split labels in positive and negative samples (indices)
-    neg_labels = np.argwhere(all_labels == 0).flatten()
-    pos_labels = np.argwhere(all_labels == 1).flatten()
-
-    
-    n_positives = min(len(pos_labels),n_patches/2) #Not always enough positive labels, sometimes even 0.
-    n_negatives = n_patches - n_positives #Are always more negative than positive labels
-    
-    neg_labels2 =  np.random.choice(neg_labels, n_negatives, replace = False)
-    pos_labels2 = np.random.choice(pos_labels, n_positives, replace = False)
-    
-    patch_indices = np.concatenate([neg_labels2, pos_labels2])    
-    
-
-    for i, index in enumerate(patch_indices):
-        x = index / int(image.shape[0]-patch_size+1) #transform index to coordinates
-        y = index % (image.shape[1]-patch_size+1)
-        patch_labels[i] = labels[y+patch_size/2, x+patch_size/2] 
-
-        patches[i, 0, :, :] = image[y:y+patch_size, x:x+patch_size]
+        patches = np.zeros((n_patches, 1, 64, 64), dtype=np.float32)
+        patch_labels = np.zeros((n_patches, 2), dtype = np.float32)
         
+        n_possible = (image.shape[0]-patch_size+1)*(image.shape[1]-patch_size+1)
+    
+        all_labels = np.zeros((n_possible), dtype=np.float32)
+        
+        #Get all lables in range
+        all_labels = labels[patch_size/2 :  image.shape[0]- patch_size/2 + 1, patch_size/2 : image.shape[1] - patch_size/2 + 1].flatten()
+     
+        #split labels in positive and negative samples (indices)
+        neg_labels = np.argwhere(all_labels == 0).flatten()
+        pos_labels = np.argwhere(all_labels == 1).flatten()
+        
+        
+        n_positives = min(len(pos_labels),n_patches/2) #Not always enough positive labels, sometimes even 0.
+        n_negatives = n_patches - n_positives #Are always more negative than positive labels
+        
+        neg_labels =  np.random.choice(neg_labels, n_negatives, replace = False)
+        pos_labels = np.random.choice(pos_labels, n_positives, replace = False)
+        
+        patch_indices = np.concatenate([neg_labels, pos_labels])    
+        
+        
+        for i, index in enumerate(patch_indices):
+            x = index / (image.shape[0]-patch_size+1 )#transform index to coordinates
+            y = index % (image.shape[1]-patch_size+1)
+            patch_labels[i] = [1 - labels[x + patch_size/2, y + patch_size/2], labels[x + patch_size/2, y + patch_size/2]]
+    
+            patches[i, 0, :, :] = image[x:x+patch_size, y:y+patch_size]
+            
 
-    return patches, patch_labels
+        return patches, patch_labels
 
+    def get_locations(self):
+        
+        image_location = self.file_names[self.current]
+        split = image_location.split('/')
+        #label_location = os.path.join(self.label_path, split[-1]) does not work on windows 
+        label_location = self.label_path + split[-1]
+        
+        return image_location, label_location
+    
+    
 
 def load_itk_images(input_path, target_path):
     itkinput = sitk.ReadImage(input_path)

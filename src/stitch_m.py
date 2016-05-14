@@ -19,13 +19,11 @@ import cPickle as pickle
 import read_data
 from tqdm import tqdm
 from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
 
-<<<<<<< HEAD
-dataset_dir = "../data/"
-input_path = "D:/data/subset7/"
-target_path = "D:/data/seg-lungs-LUNA16/seg-lungs-LUNA16/"
+
 network_path = "../network.w"
-=======
+
 if getpass.getuser() == 'harmen':
     dataset_dir = "../data/"
     input_path = "../data/subset0/"
@@ -34,7 +32,7 @@ else:
     dataset_dir = "../data/"
     input_path = "D:/data/subset7/"
     target_path = "D:/data/seg-lungs-LUNA16/seg-lungs-LUNA16/"
->>>>>>> eee58529fa4d1d66175b1b52e541fc715a7d363d
+
 
 #inputs = os.listdir(input_path)
 
@@ -51,7 +49,7 @@ def create_network():
     
     
     #input
-    input_layer = lasagne.layers.InputLayer(shape=(None, 1, 64, 64))
+    input_layer = lasagne.layers.InputLayer(shape=(None, 1, 512, 512))
     print lasagne.layers.get_output_shape(input_layer)
     
     #Conv 64
@@ -108,6 +106,7 @@ def create_network():
     # a last layer of 2 neurons, that later on enter softmax
     output = lasagne.layers.Conv2DLayer(dense1, 2, (1, 1), nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
     output_shape = lasagne.layers.get_output_shape(output)
+    print output_shape
     
     #softmax = lasagne.layers.DenseLayer(output, num_units = 2, nonlinearity=lasagne.nonlinearities.softmax)
     #print lasagne.layers.get_output_shape(softmax)
@@ -142,7 +141,7 @@ def training(network, train_X, train_Y, val_X, val_Y):
     #loss function
 
     lambda2=0.00001
-    lr = 0.0001
+    lr = 0.001
     Y = T.fmatrix()
     ftensor4 = T.TensorType('float32', (False,)*4)
     X = ftensor4()
@@ -181,6 +180,15 @@ def training(network, train_X, train_Y, val_X, val_Y):
         #for batch in iterate_minibatches(train_X, train_Y, 32, shuffle=True):
         print "epoch {}...".format(epoch)
         for inputs, targets in tqdm(Reader()):
+            
+            # Plot
+            #for inp, t in zip(inputs, targets):
+             #   print t[1]
+              #  plt.imshow(inp.reshape(64, 64), cmap='gray')
+               # plt.show()
+                
+            #return
+                
             loss, l2_loss, prediction = train_fn(inputs, targets)
             train_err += loss
             train_batches+=1
@@ -201,8 +209,6 @@ def training(network, train_X, train_Y, val_X, val_Y):
             conf_matrix += confusion_matrix(target_labels, pred_labels, labels = [0,1])
             val_loss += test_loss
             val_batches += 1
-            
-
                 
                 
             
