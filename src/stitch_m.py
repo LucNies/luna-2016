@@ -167,6 +167,7 @@ def training(network, train_X, train_Y, val_X, val_Y):
     test_e_x = np.exp(test_prediction - test_prediction.max(axis =1, keepdims=True))
     test_out = (test_e_x / test_e_x.sum(axis=1, keepdims=True)).flatten(2)
     test_loss = lasagne.objectives.categorical_crossentropy(T.clip(test_out, 0.0001, 0.9999), Y)
+    test_loss = loss.mean()
 
     val_fn = theano.function([X, Y], [test_prediction, test_loss])#, acc])
     
