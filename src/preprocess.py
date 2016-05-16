@@ -12,7 +12,7 @@ import SimpleITK as sitk
 import pickle
 
 VERSION = 2
-subsets = range(4) # not subset9, use that as testset
+subsets = range(2) # not subset9, use that as testset
 
 def preprocess(file_path = "D:/data/subset"):
     full_names = []

@@ -12,7 +12,8 @@ import theano
 import theano.tensor as T
 import matplotlib.pyplot as plt
 import lasagne
-from lasagne.layers import InverseLayer
+from lasagne.layers import InverseLayer, batch_norm
+
 import os
 import time
 import cPickle as pickle
@@ -49,11 +50,11 @@ def create_network():
     
     
     #input
-    input_layer = lasagne.layers.InputLayer(shape=(None, 1, 512, 512))
+    input_layer = lasagne.layers.InputLayer(shape=(None, 1, 64, 64))
     print lasagne.layers.get_output_shape(input_layer)
     
     #Conv 64
-    conv64 = lasagne.layers.Conv2DLayer(input_layer, n_filters, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
+    conv64 = batch_norm(lasagne.layers.Conv2DLayer(input_layer, n_filters, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal()))
     print lasagne.layers.get_output_shape(conv64)
     
     #Max pool
@@ -61,7 +62,7 @@ def create_network():
     #print lasagne.layers.get_output_shape(pool0)
     
     #Conv x1 128
-    conv128 = lasagne.layers.Conv2DLayer(conv64, n_filters*2, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
+    conv128 = batch_norm(lasagne.layers.Conv2DLayer(conv64, n_filters*2, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal()))
     print lasagne.layers.get_output_shape(conv128)
     
     #Max pool
@@ -69,9 +70,9 @@ def create_network():
     print lasagne.layers.get_output_shape(pool1)
     
     #Conv x2 256
-    conv256_0 = lasagne.layers.Conv2DLayer(pool1, n_filters*4, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
+    conv256_0 = batch_norm(lasagne.layers.Conv2DLayer(pool1, n_filters*4, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal()))
     print lasagne.layers.get_output_shape(conv256_0)
-    conv256_1 = lasagne.layers.Conv2DLayer(conv256_0, n_filters*4, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
+    conv256_1 = batch_norm(lasagne.layers.Conv2DLayer(conv256_0, n_filters*4, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal()))
     print lasagne.layers.get_output_shape(conv256_1)
     
     #Max pool
@@ -79,9 +80,9 @@ def create_network():
     print lasagne.layers.get_output_shape(pool2)
     
     #Conv x2 512
-    conv512_0 = lasagne.layers.Conv2DLayer(pool2, n_filters*8, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
+    conv512_0 = batch_norm(lasagne.layers.Conv2DLayer(pool2, n_filters*8, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal()))
     print lasagne.layers.get_output_shape(conv512_0)
-    conv512_1 = lasagne.layers.Conv2DLayer(conv512_0, n_filters*8, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
+    conv512_1 = batch_norm(lasagne.layers.Conv2DLayer(conv512_0, n_filters*8, filter_size, nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal()))
     print lasagne.layers.get_output_shape(conv512_1)
 
     #Max pool
@@ -93,18 +94,18 @@ def create_network():
     
     #Dense x2 4096    
     dropout0 = lasagne.layers.DropoutLayer(pool3, p=0.5) #check if dropout is needed 
-    dense0 = lasagne.layers.Conv2DLayer(dropout0, n_dense, (4, 4), nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
+    dense0 = batch_norm(lasagne.layers.Conv2DLayer(dropout0, n_dense, (4, 4), nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal()))
     output_shape = lasagne.layers.get_output_shape(dense0)
     print output_shape
     
     #Dense x2 4096    
     dropout1 = lasagne.layers.DropoutLayer(dense0, p=0.5) #check if dropout is needed 
-    dense1 = lasagne.layers.Conv2DLayer(dropout1, n_dense, (1, 1), nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
+    dense1 = batch_norm(lasagne.layers.Conv2DLayer(dropout1, n_dense, (1, 1), nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal()))
     output_shape = lasagne.layers.get_output_shape(dense1)
     print output_shape
     
     # a last layer of 2 neurons, that later on enter softmax
-    output = lasagne.layers.Conv2DLayer(dense1, 2, (1, 1), nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal())
+    output = batch_norm(lasagne.layers.Conv2DLayer(dense1, 2, (1, 1), nonlinearity=lasagne.nonlinearities.rectify, W=lasagne.init.HeNormal()))
     output_shape = lasagne.layers.get_output_shape(output)
     print output_shape
     
@@ -190,30 +191,33 @@ def training(network, train_X, train_Y, val_X, val_Y):
             #return
                 
             loss, l2_loss, prediction = train_fn(inputs, targets)
+            targets = [label.argmax() for label in targets]
+
             train_err += loss
             train_batches+=1
 
         print("Epoch {} of {} took {:.3f}s".format(
             epoch + 1, n_epochs, time.time() - start_time))
         print("  training loss:\t\t{:.6f}".format(train_err / float(train_batches)))
-        print "Run validation set"
+        #print "Run validation set"
         
+        """
         val_batches = 0
         val_loss = 0
         conf_matrix = np.zeros((2,2))
         #Validationset
-        for inputs, targets in tqdm(Reader(meta_data = 'validation_set.stats')):
+        for inputs, targets in tqdm(Reader(meta_data = 'validation_set.stat')):
             predictions, test_prediction, test_loss = val_fn(inputs, targets)
             target_labels = [label.argmax() for label in targets]
             pred_labels = [label.argmax() for label in test_prediction]
             conf_matrix += confusion_matrix(target_labels, pred_labels, labels = [0,1])
             val_loss += test_loss
             val_batches += 1
-                
+          """      
                 
             
-        print "Validation loss: {}".format(val_loss/float(val_batches))
-        print "True positives: {} \n False positives: {} \nFalse negatives {} \n True negatives {} (postive is lung, negative is background)".format(conf_matrix[0][0], conf_matrix[0][1], conf_matrix[1][0], conf_matrix[1][1])
+       # print "Validation loss: {}".format(val_loss/float(val_batches))
+       # print "True positives: {} \n False positives: {} \nFalse negatives {} \n True negatives {} (postive is lung, negative is background)".format(conf_matrix[0][0], conf_matrix[0][1], conf_matrix[1][0], conf_matrix[1][1])
         
         
     print "Total runtime: " +str(time.time()-begin)

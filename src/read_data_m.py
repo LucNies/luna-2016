@@ -31,7 +31,7 @@ class Reader:
     """
     Batch_size is currently unused! Returns all the slices of one subject atm
     """
-    def __init__(self, batch_size = 100, shuffle = True, meta_data = 'image_stats.stat', label_path = lbl_path, patch_shape = (64,64)):
+    def __init__(self, batch_size = 1100, shuffle = True, meta_data = 'image_stats.stat', label_path = lbl_path, patch_shape = (64,64)):
         
         if not os.path.isfile(meta_data):
             preprocess.preprocess()
@@ -64,7 +64,7 @@ class Reader:
             batch = batch - self.mean
             labels = labels >= 3
 
-            n_patches = 2
+            n_patches = 20
 
             patch_batch = np.zeros((n_patches*len(batch), 1,) + self.patch_shape, dtype=np.float32)
             patch_labels = np.zeros((n_patches*len(batch), 2), dtype=np.float32)
@@ -80,8 +80,12 @@ class Reader:
             
             
             self.current+=1
+            
+            indices = np.arange(n_patches*len(batch))
+            np.random.shuffle(indices)
+            indices = indices[:self.batch_size] #to counter memory errors, limit the batch size
 
-            return patch_batch, patch_labels
+            return patch_batch[indices], patch_labels[indices]
 
 
     def patch(self, image, labels, n_patches):
