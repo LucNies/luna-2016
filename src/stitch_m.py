@@ -162,14 +162,13 @@ def training(network, train_X, train_Y, val_X, val_Y):
     acc = T.mean(T.eq(T.argmax(test_prediction, axis=1), targets), dtype=theano.config.floatX)
     """
     #Train anv validation functions    
-    #train_fn = theano.function([inputs, targets], [loss, prediction], updates=updates)
+
     test_prediction = lasagne.layers.get_output(network, inputs = X, deterministic = True)
     test_e_x = np.exp(test_prediction - test_prediction.max(axis =1, keepdims=True))
     test_out = (test_e_x / test_e_x.sum(axis=1, keepdims=True)).flatten(2)
     test_loss = lasagne.objectives.categorical_crossentropy(T.clip(test_out, 0.0001, 0.9999), Y)
-    test_loss = test_loss.mean() - l2_loss
-    #acc = T.mean(T.eq(T.argmax(test_prediction, axis=1), Y), dtype=theano.config.floatX)
-    val_fn = theano.function([X, Y], [prediction, test_prediction, test_loss])#, acc])
+
+    val_fn = theano.function([X, Y], [test_prediction, test_loss])#, acc])
     
     begin = time.time()
     print "Start training" 
@@ -181,48 +180,50 @@ def training(network, train_X, train_Y, val_X, val_Y):
         #for batch in iterate_minibatches(train_X, train_Y, 32, shuffle=True):
         print "epoch {}...".format(epoch)
         for inputs, targets in tqdm(Reader()):
-            
-            # Plot
-            #for inp, t in zip(inputs, targets):
-             #   print t[1]
-              #  plt.imshow(inp.reshape(64, 64), cmap='gray')
-               # plt.show()
-                
-            #return
-                
+                            
             loss, l2_loss, prediction = train_fn(inputs, targets)
             targets = [label.argmax() for label in targets]
 
             train_err += loss
             train_batches+=1
+            
+            
 
         print("Epoch {} of {} took {:.3f}s".format(
             epoch + 1, n_epochs, time.time() - start_time))
         print("  training loss:\t\t{:.6f}".format(train_err / float(train_batches)))
         #print "Run validation set"
         
-        """
+        
         val_batches = 0
         val_loss = 0
         conf_matrix = np.zeros((2,2))
         #Validationset
         for inputs, targets in tqdm(Reader(meta_data = 'validation_set.stat')):
-            predictions, test_prediction, test_loss = val_fn(inputs, targets)
+            test_prediction, test_loss = val_fn(inputs, targets)
             target_labels = [label.argmax() for label in targets]
             pred_labels = [label.argmax() for label in test_prediction]
             conf_matrix += confusion_matrix(target_labels, pred_labels, labels = [0,1])
+            dice = dice_score(pred_labels, target_labels)
             val_loss += test_loss
             val_batches += 1
-          """      
+            
+                
                 
             
-       # print "Validation loss: {}".format(val_loss/float(val_batches))
-       # print "True positives: {} \n False positives: {} \nFalse negatives {} \n True negatives {} (postive is lung, negative is background)".format(conf_matrix[0][0], conf_matrix[0][1], conf_matrix[1][0], conf_matrix[1][1])
+        print "Validation loss: {}".format(val_loss/float(val_batches))
+        print "Dice score: {}".format(dice)
+        print "True positives: {} \n False negative: {} \nFalse positive {} \n True negatives {} (postive is lung, negative is background)".format(conf_matrix[0][0], conf_matrix[0][1], conf_matrix[1][0], conf_matrix[1][1])
+
+        
+        print "save model..."
+        np.savez('../networks/lung_segmentation/network_epoch{}.npz'.format(epoch), *lasagne.layers.get_all_param_values(network))
         
         
     print "Total runtime: " +str(time.time()-begin)
     
-
+def dice_score(p,t):
+    return np.sum(p[t == 1]) * 2.0 / (np.sum(p) + np.sum(t))
 
 def stitch(predictions, prediction, i, width, height):
     patch_cols = slice(i, predictions.shape[1], width)

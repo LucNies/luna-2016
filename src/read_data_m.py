@@ -59,7 +59,6 @@ class Reader:
             raise StopIteration
         else:
 
-            begin = time.time()
             batch, labels = load_itk_images(*self.get_locations())
             batch = batch - self.mean
             labels = labels >= 3
