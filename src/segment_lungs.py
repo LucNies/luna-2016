@@ -34,7 +34,7 @@ def shift_matrix(matrix, amount):
     N,M = matrix.shape[2:]  # Required for a 0-shift
     matrix_ = np.zeros_like(matrix)
     matrix_[:, :, i:, j:] = matrix[:, :, :N-i, :M-j]
-    return matrix_
+    return matrix_[::-1, ::-1]
 
 
 def shift(inputs, network):
