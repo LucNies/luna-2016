@@ -23,12 +23,12 @@ class Annotator:
         """
         self.filename = filename
         self.slice_shape = slice_shape
-        self.annotation = self.prep()
         self.annotation_filename = annotation_filename
+        self.annotation = self.prep()
 
     @staticmethod
     def dist(point, ellipse):
-        np.sum(p*p / (e*e) for p,e in zip(point, ellipse))
+        return np.sum(p*p / float(e*e) for p,e in zip(point, ellipse))
 
     @staticmethod
     def generate_coos(c, d):
@@ -37,7 +37,7 @@ class Annotator:
         for i in range(-r[0], r[0] + 1):
             for j in range(-r[1], r[1] + 1):
                 for k in range(-r[2], r[2] + 1):
-                    if Annotator.dist((x, y, z), r) <= 1:
+                    if Annotator.dist((i, j, k), r) <= 1:
                         yield (x + i, y + j, z + k)
 
     @staticmethod
