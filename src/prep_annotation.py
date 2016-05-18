@@ -3,6 +3,8 @@ from scipy import sparse
 import os
 import SimpleITK as sitk
 import getpass
+import glob
+from tqdm import tqdm
 
 if getpass.getuser().lower() == "steven":
     data_dir = os.path.join("F:/Temp/CAD/data")
@@ -18,32 +20,31 @@ class Annotator:
     """Generates annotations for nodules. One Annotator per .mhd file is used. Use get or get_full to obtain slices or
     the full matrix respectively. Do not forget to give non-default slice shapes."""
 
-    def __init__(self, filename, slice_shape=(512, 512, 512), annotation_filename = annotation_filename):
+    def __init__(self, filename, annotation_filename = annotation_filename):
         """
         Initializes the annotation by building a sparse 3D matrix of the relevant file using the annotation file.
         Please make sure that the annotation filename is correct.
         Args:
             filename: The .mhd-filename of the current patient
-            slice_shape: Optional. 3D dimensions of the image.
         """
         self.filename = filename
-        self.slice_shape = slice_shape
         self.annotation_filename = annotation_filename
         self.annotation = self.prep()
 
     @staticmethod
     def dist(point, ellipse):
-        return np.sum(p*p / float(e*e) for p,e in zip(point, ellipse))
+        return np.sum(p*p / (float(e*e)+0.00001) for p,e in zip(point, ellipse))
 
-    @staticmethod
-    def generate_coos(c, d):
+    def generate_coos(self, c, d):
         r = tuple(di / 2 for di in d)
         x, y, z = c
-        for i in range(-r[0], r[0] + 1):
-            for j in range(-r[1], r[1] + 1):
-                for k in range(-r[2], r[2] + 1):
-                    if Annotator.dist((i, j, k), r) <= 1:
-                        yield (x + i, y + j, z + k)
+        for i in range(-r[0]-5, r[0] + 5):
+            for j in range(-r[1]-5, r[1] + 5):
+                for k in range(-r[2]-5, r[2] + 5):
+                    if Annotator.dist((i, j, k), r) <= 2:
+                        if x+i >= 0 and y+j >= 0 and z+k >= 0:
+                            if x+i < self.slice_shape[0] and y+j < self.slice_shape[1] and z+k < self.slice_shape[2]:
+                                yield (x + i, y + j, z + k)
 
     @staticmethod
     def world_to_pixel(world, o, s):
@@ -67,6 +68,7 @@ class Annotator:
         itkimage = sitk.ReadImage(os.path.join(data_dir, fn))
         origin = np.array(list(reversed(itkimage.GetOrigin())))
         spacing = np.array(list(reversed(itkimage.GetSpacing())))
+        self.slice_shape = np.array(list(reversed(itkimage.GetSize())))
         return origin, spacing
 
     def prep(self):
@@ -124,11 +126,24 @@ class Annotator:
 
 
 if __name__ == "__main__":
-    A = Annotator("1.3.6.1.4.1.14519.5.2.1.6279.6001.100225287222365663678666836860.mhd")
-    for s in range(512):
-        m = A.get(s, dense=True)
 
-        if 1 in m:
-            import matplotlib.pyplot as plt
-            plt.imshow(m)
-            plt.show()
+    # Get files
+    files = []
+    for i in range(10):
+        files.extend(glob.glob(os.path.join(data_dir, 'subset%i' % i) + "/*.mhd"))
+    
+    files = [x.split(os.sep)[-1] for x in files]
+
+    for f in tqdm(files):
+        A = Annotator(f)
+        m = A.get_full(warning=False).astype(bool)
+
+        #for i in m:
+        #    if True in i:
+        #        import matplotlib.pyplot as plt 
+        #        plt.imshow(i)
+        #        plt.show()
+
+        np.savez_compressed(os.path.join(data_dir, 'candidates', f), m)
+
+        # Load: np.load(os.path.join(data_dir, 'candidates', f + '.npz'))['arr_0']
