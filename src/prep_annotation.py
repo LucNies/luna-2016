@@ -2,9 +2,14 @@ import numpy as np
 from scipy import sparse
 import os
 import SimpleITK as sitk
+import getpass
 
-data_dir = os.path.join("..", "data")
-annotation_filename = os.path.join(data_dir, "annotations.csv")
+if getpass.getuser().lower() == "steven":
+    data_dir = os.path.join("F:/Temp/CAD/data")
+else:
+    data_dir = os.path.join("..", "data")
+
+annotation_filename = os.path.join(data_dir, "CSVFILES/annotations.csv")
 assert os.path.exists(annotation_filename), "Please put annotations.csv in {}".format(
     os.path.abspath(annotation_filename))
 
@@ -119,8 +124,11 @@ class Annotator:
 
 
 if __name__ == "__main__":
-    A = Annotator("1.3.6.1.4.1.14519.5.2.1.6279.6001.108197895896446896160048741492.mhd")
+    A = Annotator("1.3.6.1.4.1.14519.5.2.1.6279.6001.100225287222365663678666836860.mhd")
     for s in range(512):
-        m = A.get(s)
-        if m.nnz > 0:
-            print s, "\n", m
+        m = A.get(s, dense=True)
+
+        if 1 in m:
+            import matplotlib.pyplot as plt
+            plt.imshow(m)
+            plt.show()
