@@ -26,7 +26,7 @@ def stitch(predictions, prediction, i, width, height):
     patch_cols = slice(x, predictions.shape[1], width)
     patch_rows = slice(y, predictions.shape[2], height)
 
-    predictions[:, patch_cols, patch_rows] = prediction
+    predictions[:, patch_rows, patch_cols] = prediction
     return predictions
 
 def shift_matrix(matrix, amount):
@@ -34,7 +34,7 @@ def shift_matrix(matrix, amount):
     N,M = matrix.shape[2:]  # Required for a 0-shift
     matrix_ = np.zeros_like(matrix)
     matrix_[:, :, i:, j:] = matrix[:, :, :N-i, :M-j]
-    return matrix_[::-1, ::-1]
+    return matrix_
 
 
 def shift(inputs, network):
@@ -93,7 +93,7 @@ def test():
                 j += 1
 
             predictions = stitch(predictions, subject_predictions, i, width+1, height+1)
-            i+=1
+            i += 1
             
 
             plt.imshow(predictions[60, :, :], cmap='gray')
@@ -103,6 +103,6 @@ def test():
 
         print "Accuracy: {}".format(dice_score(predictions, targets))
     return
-    
+
 if __name__ == '__main__':
     test()
