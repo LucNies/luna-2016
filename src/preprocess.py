@@ -12,9 +12,9 @@ import SimpleITK as sitk
 import pickle
 
 VERSION = 2
-subsets = range(4) # not subset9, use that as testset
 
-def preprocess(file_path = "D:/data/subset"):
+
+def preprocess(out_name = 'image_stats.stat', subsets = range(4), file_path = "D:/data/subset"):
     full_names = []
     print 'Creating file list'
     print 'Processing {} subsets, is this ok?'.format(len(subsets))
@@ -42,7 +42,7 @@ def preprocess(file_path = "D:/data/subset"):
     metadata['n_samples'] = len(full_names)
     metadata['file_names'] = full_names
     metadata['n_slices'] = n_slices
-    with open('image_stats.stat', 'wb') as write:
+    with open(out_name, 'wb') as write:
         pickle.dump(metadata, write)
     print 'done saving'
 
@@ -80,5 +80,5 @@ def get_subject_name(file_name):
     
 
 if __name__ == '__main__' :
-    preprocess()
+    preprocess(out_name = 'test_set.stat', subsets = [9])
 

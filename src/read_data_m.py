@@ -28,9 +28,7 @@ else:
 patch_size = 64
 
 class Reader:
-    """
-    Batch_size is currently unused! Returns all the slices of one subject atm
-    """
+
     def __init__(self, batch_size = 1100, shuffle = True, meta_data = 'image_stats.stat', label_path = lbl_path, patch_shape = (64,64)):
         
         if not os.path.isfile(meta_data):

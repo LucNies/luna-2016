@@ -50,7 +50,7 @@ def create_network():
     
     
     #input
-    input_layer = lasagne.layers.InputLayer(shape=(None, 1, 64, 64))
+    input_layer = lasagne.layers.InputLayer(shape=(None, 1, None, None))
     print lasagne.layers.get_output_shape(input_layer)
     
     #Conv 64
@@ -187,6 +187,7 @@ def training(network, train_X, train_Y, val_X, val_Y):
 
             train_err += loss
             train_batches+=1
+            break
             
             
 
@@ -205,15 +206,14 @@ def training(network, train_X, train_Y, val_X, val_Y):
             target_labels = [label.argmax() for label in targets]
             pred_labels = [label.argmax() for label in test_prediction]
             conf_matrix += confusion_matrix(target_labels, pred_labels, labels = [0,1])
-            dice = dice_score(pred_labels, target_labels)
             val_loss += test_loss
             val_batches += 1
-            
+            break
                 
-                
+        dice = dice_score(conf_matrix)
             
         print "Validation loss: {}".format(val_loss/float(val_batches))
-        print "Dice score: {}".format(dice)
+        print "Dice score: {}".format(dice) 
         print "True positives: {} \n False negative: {} \nFalse positive {} \n True negatives {} (postive is lung, negative is background)".format(conf_matrix[0][0], conf_matrix[0][1], conf_matrix[1][0], conf_matrix[1][1])
 
         
@@ -223,42 +223,13 @@ def training(network, train_X, train_Y, val_X, val_Y):
         
     print "Total runtime: " +str(time.time()-begin)
     
-def dice_score(p,t):
-    return np.sum(p[t == 1]) * 2.0 / (np.sum(p) + np.sum(t))
-
-def stitch(predictions, prediction, i, width, height):
-    patch_cols = slice(i, predictions.shape[1], width)
-    patch_rows = slice(i, predictions.shape[2], height)
-    predictions[:, patch_cols, patch_rows] = prediction
-    return predictions
-
-
-def accuracy(predictions, targets):
-    good = (predictions == targets).sum()
-    total = targets.sum()
-    return good/float(total)
-
-
-def test(network):
-    reader = Reader(patch_shape=(512, 512))
-    for inputs, _ in tqdm(reader):
-        _, targets = reader.load_itk_images(*reader.get_locations())
-        targets = targets >= 3
-        predictions = np.zeros_like(targets)
-        width = targets.shape[1] / lasagne.layers.get_output_shape(network, inputs.shape)[2]
-        height = targets.shape[2] / lasagne.layers.get_output_shape(network, inputs.shape)[3]
-
-        i = 0
-        for inputs_ in shift(inputs, network):
-            prediction = lasagne.layers.get_output(network, inputs_)
-            predictions = stitch(predictions, prediction, i, width, height)
-            i+=1
-
-        print "Accuracy: {}".format(accuracy(predictions, targets))
-    return
+def dice_score(conf_matrix):
+    tp = conf_matrix[0][0]
+    fn = conf_matrix[0][1]
+    fp = conf_matrix[1][0]
+    
+    return tp*2. / (tp+fp+tp+fn)
 
 if __name__ == '__main__':
     network = create_network()
     training(network, 0, 0, 0, 0)
-    #test(network)
-
