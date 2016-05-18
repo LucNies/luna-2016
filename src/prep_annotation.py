@@ -27,13 +27,18 @@ class Annotator:
         self.annotation_filename = annotation_filename
 
     @staticmethod
+    def dist(point, ellipse):
+        np.sum(p*p / (e*e) for p,e in zip(point, ellipse))
+
+    @staticmethod
     def generate_coos(c, d):
         r = tuple(di / 2 for di in d)
         x, y, z = c
         for i in range(-r[0], r[0] + 1):
             for j in range(-r[1], r[1] + 1):
                 for k in range(-r[2], r[2] + 1):
-                    yield (x + i, y + j, z + k)
+                    if Annotator.dist((x, y, z), r) <= 1:
+                        yield (x + i, y + j, z + k)
 
     @staticmethod
     def world_to_pixel(world, o, s):
