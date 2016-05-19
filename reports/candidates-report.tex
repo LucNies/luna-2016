@@ -1,0 +1,135 @@
+% Template for CAD in medical imaging - Project Report
+%          spconf.sty  - ICASSP/ICIP LaTeX style file, and
+%          IEEEbib.bst - IEEE bibliography style file.
+% --------------------------------------------------------------------------
+\documentclass{article}
+\usepackage{spconf,amsmath,graphicx}
+\usepackage{subfigure}
+
+% Title
+\title{Title of the project}
+%
+\name{Author(s) Name(s)\thanks{Thanks to XYZ agency for funding.}}
+\address{}
+%
+% For example:
+% ------------
+%\address{School\\
+%	Department\\
+%	Address}
+%
+% Two addresses (uncomment and modify for two-address case).
+% ----------------------------------------------------------
+%\twoauthors
+%  {A. Author-one, B. Author-two\sthanks{Thanks to XYZ agency for funding.}}
+%	{School A-B\\
+%	Department A-B\\
+%	Address A-B}
+%  {C. Author-three, D. Author-four\sthanks{The fourth author performed the work
+%	while at ...}}
+%	{School C-D\\
+%	Department C-D\\
+%	Address C-D}
+%
+% More than two addresses
+% -----------------------
+% \name{Author Name$^{\star \dagger}$ \qquad Author Name$^{\star}$ \qquad Author Name$^{\dagger}$}
+%
+% \address{$^{\star}$ Affiliation Number One \\
+%     $^{\dagger}$}Affiliation Number Two
+%
+\begin{document}
+%\ninept
+%
+\maketitle
+%
+\begin{abstract}
+Write your abstract here.
+\end{abstract}
+
+
+% Introduction
+\section{Introduction}
+\label{sec:intro}
+Your introduction here.
+You can cite other papers as \cite{ref1}.
+You can \emph{emphasize} words or use \textbf{bold} characters.
+You can write formulas in the text as $y = x + \frac{1}{z} - \sum_{i=1}^M \alpha(i) - \sigma(i)$, or define the formula as an equation:
+\begin{equation}\label{eq:myEquation}
+y = x + \frac{1}{z} - \sum_{i=1}^M \alpha(i) - \sigma(i)
+\end{equation}
+You can make lists as follows:
+\begin{itemize}
+\item item1
+\item item2
+\end{itemize}
+
+You can make a table as follows:
+
+% Table
+\begin{table}[h]
+\caption{\small{Caption here.}}
+\label{tab:parameters}
+\centering
+\begin{tabular}{c | c | l}
+text & text & text\\
+\hline \hline
+text & text & text
+\end{tabular}
+\end{table}
+
+You can include figures as follows:
+
+% Figure
+\begin{figure}[h]
+\centering
+\subfigure[]
+{\includegraphics[width=0.7\linewidth]{./figure.png}}
+\subfigure[]
+{\includegraphics[width=0.7\linewidth]{./figure.png}}
+\caption{Caption here. \label{figure:patterns}}
+\end{figure}
+
+% Method
+\section{Method}\label{sec:method}
+Explain the proposed method here.
+You can use subsections to detail each part of your approach as follows. 
+\subsection{Part1}
+Your text here.
+
+\subsection{Part2}
+Your text here.
+
+\subsection{Part3}
+Your text here.
+
+% Experiments
+\section{Experiments}\label{sec:experiments}
+
+
+% Results
+\section{Results}\label{sec:results}
+
+
+% Discussion
+\section{Discussion}\label{sec:discussion}
+
+
+
+
+
+% References should be produced using the bibtex program from suitable
+% BiBTeX files (here: strings, refs, manuals). The IEEEbib.bst bibliography
+% style file from IEEE produces unsorted bibliography list.
+% -------------------------------------------------------------------------
+\bibliographystyle{IEEEbib}
+
+\begin{thebibliography}{}
+
+\bibitem{ref1}
+Authors, Year, Title, Journal, Volume, Pages.
+
+\end{thebibliography}
+
+
+\end{document}
