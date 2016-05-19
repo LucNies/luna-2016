@@ -89,8 +89,34 @@ You can use subsections to detail each part of your approach as follows.
 \subsection{Fully convolutional network}
 Your text here.
 
-\subsection{Blob detection}
+\subsection{Nodule detection using blobness feature}
+We used a second approach for detection lung nodule candidates which is the more conventional approach of using their blob-like structure. The first step is applying the lung segmentation as a mask on the lung CT images to reduce the search space to the actual lungs. The algorithm for the actual candidate detection is as follows:
 
+\begin{itemize}
+\item Apply two different sized Laplacian of Gaussian (LoG) filters. A LoG filter is circular-symmetric and thus widely used for blob detection, but has a maximum response to a particular blob size. We combined two filters with normalized kernels (IS THIS NORMALIZED?), the first with $\sigma = 3$ and \emph{kernel extent} = 7 and the second with $\sigma = 5$ and \emph{kernel extent} = 11 CHECK VALUES. We chose these parameters based on the paper of Van de Leemput et al. \cite{leemput}
+\item Take the pixel-wise maximum of the results of the LoGs to combine them to one result.
+\item Threshold the resulting image with value THRESHOLDVALUEAFTERLOGS. See Figure \ref{figure:LoGresult} for an example result. This value is established by sampling the values of known nodules and healthy lung tissue.
+\begin{figure}[h]
+\centering
+{\includegraphics[width=0.7\linewidth]{./figure.png}}
+\caption{The thresholded image after taking the maximum of the two LoGs. \label{figure:LoGresult}}
+\end{figure}
+\item Do a connected component analysis on the resulting image, and select only components with values between CONNECTEDCOMPONENTSVOLUMEVALUES. This identifies the initial candidates. See Figure \ref{figure:conncomp} for an example result.
+\begin{figure}[h]
+\centering
+{\includegraphics[width=0.7\linewidth]{./figure.png}}
+\caption{The result of applying a connected component analysis on the image shown in Figure \ref{figure:LoGresult}. \label{figure:conncomp}}
+\end{figure}
+\item Threshold the resulting image again with value THRESHOLD2VALUE.
+\item Apply a Hough transform to identify unwanted candidates, i.e. candidates with features not corresponding to lung nodule characteristics.
+\item Threshold the resulting image again to remove the candidates identified by the Hough transform and keep the lung nodule candidates. See Figure \ref{figure:Houghresult} for an example result.
+\begin{figure}[h]
+\centering
+{\includegraphics[width=0.7\linewidth]{./figure.png}}
+\caption{An example result after applying the Hough transform and thresholding. \label{figure:Houghresult}}
+\end{figure}
+\end{itemize}
+ADD IMAGES
 
 % Experiments
 %\section{Experiments}\label{sec:experiments}
@@ -112,8 +138,17 @@ The recall obtained with this method is RECALL.
 \section{Discussion}\label{sec:discussion}
 
 
-
-
+\appendix
+\section{Contributions}
+\textbf{Luc Nies:} \\
+\\
+\textbf{Tom van de Poll:} \\
+\\
+\textbf{Harmen Prins:} \\
+\\
+\textbf{Steven Reitsma:} \\
+\\
+\textbf{Inez Wijnands:} Contributed to creating the MeVisLab candidate detection method using blob detection. Wrote introduction section and method section on the conventional approach in report.
 
 % References should be produced using the bibtex program from suitable
 % BiBTeX files (here: strings, refs, manuals). The IEEEbib.bst bibliography
@@ -123,10 +158,10 @@ The recall obtained with this method is RECALL.
 
 \begin{thebibliography}{}
 
-\bibitem{ref1}
-Authors, Year, Title, Journal, Volume, Pages.
-
+\bibitem{leemput}
+S. van de Leemput, F. Dorssers \& B.E. Bejnordi (2015). A novel spherical shell filter for reducing false positives in automatic detection of pulmonary nodules in thoracic CT scans. \emph{Proceedings SPIE Medical Imaging, 9414}:94142P.
 \end{thebibliography}
+
 
 
 \end{document}
