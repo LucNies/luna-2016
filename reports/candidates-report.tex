@@ -7,10 +7,13 @@
 \usepackage{subfigure}
 
 % Title
-\title{Title of the project}
+\title{Computer Aided Diagnosis\\LUNA16: Candidate detection}
 %
-\name{Author(s) Name(s)\thanks{Thanks to XYZ agency for funding.}}
-\address{}
+\makeatletter
+\def\@name{ \emph{Luc Nies (s4136748)}, \emph{Tom van de Poll (s4106512)}, \emph{Harmen Prins (s4132297)}, \\ \emph{Steven Reitsma (s4132343)} \& \emph{Inez Wijnands (s4149696)}}
+\makeatother
+
+\address{Radboud University Nijmegen}
 %
 % For example:
 % ------------
@@ -51,20 +54,9 @@ Write your abstract here.
 % Introduction
 \section{Introduction}
 \label{sec:intro}
-Your introduction here.
-You can cite other papers as \cite{ref1}.
-You can \emph{emphasize} words or use \textbf{bold} characters.
-You can write formulas in the text as $y = x + \frac{1}{z} - \sum_{i=1}^M \alpha(i) - \sigma(i)$, or define the formula as an equation:
-\begin{equation}\label{eq:myEquation}
-y = x + \frac{1}{z} - \sum_{i=1}^M \alpha(i) - \sigma(i)
-\end{equation}
-You can make lists as follows:
-\begin{itemize}
-\item item1
-\item item2
-\end{itemize}
+In the \emph{LUng Nodule Analysis 2016 (LUNA16)} challenge, we aim to detect lung nodules in low-dose lung CT images. Firstly, we have segmented the lungs from the images. The next step is identifying candidates for lung nodules. Our aim is to detect enough candidates to include all actual lung nodules. In other words, be as sensitive as possible. The future step is of course to remove the false positives, but first we strive towards including the annotated nodules.
 
-You can make a table as follows:
+We continued working on the deep learning approach we used for the previous phase. In that phase we worked on lung segmentation and for this phase we treated candidate detection again as a segmentation problem. Secondly, we also used an image processing approach where we use the features of nodules such as blobness for candidate detection. These approaches and results are explained more detailed in the following sections.
 
 % Table
 \begin{table}[h]
@@ -94,17 +86,14 @@ You can include figures as follows:
 \section{Method}\label{sec:method}
 Explain the proposed method here.
 You can use subsections to detail each part of your approach as follows. 
-\subsection{Part1}
+\subsection{Fully convolutional network}
 Your text here.
 
-\subsection{Part2}
-Your text here.
+\subsection{Blob detection}
 
-\subsection{Part3}
-Your text here.
 
 % Experiments
-\section{Experiments}\label{sec:experiments}
+%\section{Experiments}\label{sec:experiments}
 
 
 % Results
