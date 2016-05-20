@@ -85,8 +85,44 @@ You can include figures as follows:
 % Method
 \section{Method}\label{sec:method}
 
-\subsection{Segmentation using fully convolutional network}
-Long et al. \cite{long}. %Lung segmentation \& Nodule segmentation (I thought we might just use "segmentation" in the header)
+\subsection{Fully convolutional networks}
+\subsubsection{Lung segmentation}
+During the previous phase, we used fully convolutional networks \cite{long} to segment the lungs from the background. When we wrote the previous report, we were unable to get this method to work in time, but since then we have correctly finished the implementation. We report our results with this method on the lung segmentation task first. Since this method can also be applied to nodule candidate detection, we will also report the results on this task.
+
+Our final network architecture is based on the VGG net network \cite{simonyan}, as Long et al. \cite{long} reported that this architecture worked best for image segmentation. We adapted this network to fit our problem. This resulted in a 12 layer network:
+\begin{enumerate}
+    \item Conv, 12 filters, 3x3 pixels
+    \item Conv, 24 filters, 3x3 pixels
+    \item Max pooling, 2x2 pixels
+    \item Conv, 48 filters, 3x3 pixels
+    \item Conv, 48 filters, 3x3 pixels
+    \item Max pooling, 2x2 pixels
+    \item Conv, 96 filters, 3x3 pixels
+    \item Conv, 96 filters, 3x3 pixels
+    \item Max pooling, 2x2 pixels
+    \item Conv, 1024 filters, 4x4 pixels, dropout 0.5
+    \item Conv, 1024 filters, 1x1 pixels, dropout 0.5
+    \item Conv, 2 filters, 1x1 pixels
+\end{enumerate}
+
+In Figure \ref{bestwellon} you can see the successful result of using the full lung slice as input of the fully convolutional network. The result is an image that is 57x57 in size. Due to the pooling layers and the lack of padding in the convolutional layers, the image is reduced in size compared to its input. To upscale the image, we employ the shift-and-stitch method as proposed in \cite{long}. The result of the shift and stitch method is shown in Figure \ref{bestwelprima}. We can still see some parts besides the lungs that are marked as lung. However, this is something that can easily be fixed by using connected components analysis with a minimum volume filter. With this method, we attain a dice score of 0.985 on subset 9 (our validation set). Note that the network was trained on only four subsets (0-3) to speed up training. We expect that this method will perform even better when trained on all data sets.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{best_wel_lon.png}
+    \caption{The result of using the full lung slice image (size 512x512) as input in the network.}
+    \label{bestwellon}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{best_wel_prima.png}
+    \caption{The result after performing shift-and-stitch.}
+    \label{bestwelprima}
+\end{figure}
+
+\subsubsection{Nodule detection with Fully Convolutional Networks}
+We employ the exact same technique for nodule detection. The only difference is in the labels. Whereas we use the segmentation masks as the labels in the lung segmentation task, we now use nodule masks. We parsed the annotations.csv file and from this generated 3D masks that can be used as labels in the fully convolutional network. One extra challenge here is the extreme class imbalance. Even in the lung segmentation task, the class imbalance was something that we could not ignore. In that task, we employed class balancing by enforcing our minibatches to have a 50/50 split in terms of positive and negative samples. For the nodule detection task, this is harder, since we have even less positive samples. Even with data augmentation, the amount of positive samples is still too few. Due to time constraints and bugs left over in our implementation from the previous phase, we were as of yet unable to get this method to work. We will continue working on it during the next week. We know where the problem is (class imbalance) so we are positive we will get this method to work within a week.
 
 \subsection{Extracting candidates using Laplacian of Gaussian}
 We used a second approach for detection lung nodule candidates which is the more conventional approach of using their blob-like structure. The first step is applying the lung segmentation as a mask on the lung CT images to reduce the search space to the actual lungs. The algorithm for the actual candidate detection is as follows:
@@ -123,6 +159,7 @@ ADD IMAGES
 % Results
 \section{Results}\label{sec:results}
 \subsection{Candidate segmentation using the FCN}
+None as of yet.
 
 \subsection{Candidate extraction using Laplacian of Gaussian}
 The results are based on the first 30 images in subset 9 of the dataset. The results are evaluated in two ways: the dice score of the predictions to the ground truth candidates given for this phase of the assignment, and the recall between the same datasets. The reason that the results are only examined on 30 images is that this method is very time consuming (over ten minutes per image) and the method was completed relatively close to the deadline.
@@ -137,13 +174,13 @@ The recall obtained with this method is RECALL.
 
 \appendix
 \section{Contributions}
-\textbf{Luc Nies:} \\
+\textbf{Luc Nies:} Final adjustments to the fully convolutional network so that it worked on the lung segmentation. Created the FCN pipeline, tested a lot of possible network and input parameters. Final adjustments to shift and stitch, and reading in of data. Wrote about the network architecture and parts of the nodule detection with FCN section.
 \\
 \textbf{Tom van de Poll:} \\
 \\
 \textbf{Harmen Prins:} \\
 \\
-\textbf{Steven Reitsma:} \\
+\textbf{Steven Reitsma:} Helped building the fully convolutional network to work correctly. Fixed buggy shift and stitch method. Created 3D nodule masks. Wrote report sections on fully convolutional network. \\
 \\
 \textbf{Inez Wijnands:} Contributed to creating the MeVisLab candidate detection method using blob detection. Wrote introduction section and method section on the conventional approach in report.
 
@@ -157,6 +194,8 @@ The recall obtained with this method is RECALL.
 \bibitem{long}
 J. Long, E. Shelhamer \& T. Darrell (2015). Fully convolutional networks for semantic segmentation. \emph{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition}: 3431--3440.
 
+\bibitem{simonyan}
+K. Simonyan \& A. Zisserman (2014). Very deep convolutional networks for large-scale image recognition. \emph{arXiv:1409.1556}
 
 \bibitem{leemput}
 S. van de Leemput, F. Dorssers \& B.E. Bejnordi (2015). A novel spherical shell filter for reducing false positives in automatic detection of pulmonary nodules in thoracic CT scans. \emph{Proceedings SPIE Medical Imaging, 9414}:94142P.
