@@ -7,6 +7,7 @@ Created on Wed Apr 27 22:01:02 2016
 import getpass
 
 from read_data_m import Reader
+from read_nodule_patches import NoduleReader
 import numpy as np
 import theano
 import theano.tensor as T
@@ -180,11 +181,19 @@ def training(network, train_X, train_Y, val_X, val_Y):
         start_time = time.time()
         #for batch in iterate_minibatches(train_X, train_Y, 32, shuffle=True):
         print "epoch {}...".format(epoch)
-        for inputs, targets in tqdm(Reader()):
-                            
+        for inputs, targets in tqdm(NoduleReader()):
+            
+            
             loss, l2_loss, prediction = train_fn(inputs, targets)
             targets = [label.argmax() for label in targets]
-
+            for i, label in enumerate(targets):
+                print inputs.shape
+                print  label
+                plt.imshow(inputs[i, 0, :, :], cmap='gray')
+                plt.show()
+                
+            
+            
             train_err += loss
             train_batches+=1
             break
@@ -201,7 +210,7 @@ def training(network, train_X, train_Y, val_X, val_Y):
         val_loss = 0
         conf_matrix = np.zeros((2,2))
         #Validationset
-        for inputs, targets in tqdm(Reader(meta_data = 'validation_set.stat')):
+        for inputs, targets in tqdm(NoduleReader(meta_data = 'validation_set.stat')):
             test_prediction, test_loss = val_fn(inputs, targets)
             target_labels = [label.argmax() for label in targets]
             pred_labels = [label.argmax() for label in test_prediction]
