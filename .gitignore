@@ -67,3 +67,7 @@ target/
 #Own files
 *.stat
 *.png
+*.npz
+src/image_stats.stat
+*.stat
+src/image_stats.stat
