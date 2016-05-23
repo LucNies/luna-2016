@@ -58,6 +58,15 @@ def load_network(network_path = '../networks/trained_segmentation/'):
     lasagne.layers.set_all_param_values(network, param_values)
     
     return network
+    
+def fix(predictions, width, height):
+    fixed = np.zeros_like(predictions)
+    for s in range(predictions.shape[0]):
+        for x in range(0, 513, width):
+            for y in range(0, 513, height):
+                fixed[s, x:x+width, y:y+width] = np.rot90(predictions[s, x:x+width, y:y+width], k=2)
+                
+    return fixed
 
 def test():
     network = load_network()
@@ -92,11 +101,16 @@ def test():
 
                 j += 1
 
+            #plt.imshow(subject_predictions[60], cmap='gray')
+            #plt.show()
             predictions = stitch(predictions, subject_predictions, i, width+1, height+1)
             i += 1
             
+            # Dirty fix
+            fixed_predictions = fix(predictions, width+1, height+1)
+            
 
-            plt.imshow(predictions[60, :, :], cmap='gray')
+            plt.imshow(fixed_predictions[60, :, :], cmap='gray')
             plt.savefig(str(i) + '.png')
             
         predictions = predictions[:, :512, :512]
