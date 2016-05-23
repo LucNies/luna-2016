@@ -6,6 +6,8 @@ import getpass
 import glob
 from tqdm import tqdm
 
+from read_data_m import load_itk_images
+
 if getpass.getuser().lower() == "steven":
     data_dir = os.path.join("F:/Temp/CAD/data")
 else:
@@ -69,6 +71,7 @@ class Annotator:
         origin = np.array(list(reversed(itkimage.GetOrigin())))
         spacing = np.array(list(reversed(itkimage.GetSpacing())))
         self.slice_shape = np.array(list(reversed(itkimage.GetSize())))
+        print "Slice shape in prep_annotation.get_spacing: {}".format(self.slice_shape)
         return origin, spacing
 
     def prep(self):
@@ -76,7 +79,7 @@ class Annotator:
         coos = []
         with open(self.annotation_filename) as annotations:
             for annotation in annotations:
-                filename_, x, y, z, d = annotation.split(",")
+                filename_ , z, y, x, d = annotation.split(",") # z,y,x is the coordinate encoding for some reason
                 if filename_ + ".mhd" == self.filename:
                     c_, d_ = self.world_to_pixel((x, y, z, d), orig, spacing)
                     for coo in self.generate_coos(c_, d_):
@@ -129,7 +132,7 @@ if __name__ == "__main__":
 
     # Get files
     files = []
-    for i in range(10):
+    for i in range(1):
         files.extend(glob.glob(os.path.join(data_dir, 'subset%i' % i) + "/*.mhd"))
     
     files = [x.split(os.sep)[-1] for x in files]
@@ -137,13 +140,17 @@ if __name__ == "__main__":
     for f in tqdm(files):
         A = Annotator(f)
         m = A.get_full(warning=False).astype(bool)
-
-        #for i in m:
-        #    if True in i:
-        #        import matplotlib.pyplot as plt 
-        #        plt.imshow(i)
-        #        plt.show()
-
+        """
+        import matplotlib.pyplot as plt
+        img, _ = load_itk_images(os.path.join(data_dir, "subset0", f), os.path.join(data_dir, "subset0", f))
+        for i, im in zip(m, img):
+            if True in i:
+                plt.figure(1)
+                plt.imshow(i)
+                plt.figure(2)
+                plt.imshow(im)
+                plt.show()
+        """
         np.savez_compressed(os.path.join(data_dir, 'candidates', f), m)
 
         # Load: np.load(os.path.join(data_dir, 'candidates', f + '.npz'))['arr_0']
