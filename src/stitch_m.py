@@ -181,8 +181,9 @@ def training(network, train_X, train_Y, val_X, val_Y):
         start_time = time.time()
         #for batch in iterate_minibatches(train_X, train_Y, 32, shuffle=True):
         print "epoch {}...".format(epoch)
+        reader = NoduleReader()
         print "n_samples: {}".format(reader.n_samples)
-        for inputs, targets in tqdm(NoduleReader()):           
+        for inputs, targets in tqdm(reader):           
             
             loss, l2_loss, prediction = train_fn(inputs, targets)
             targets = [label.argmax() for label in targets]
