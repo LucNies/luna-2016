@@ -44,13 +44,14 @@ class ImageReader:
         return self
 
     def next(self):
-        if self.current >10:#self.n_samples-1:
+        if self.current > self.n_samples-1:
             raise StopIteration
         else:
 
             image_location, label_locations, subject_name = self.get_locations()
             subject, segmentation = load_itk_images(image_location, label_locations)
             subject = subject - self.mean
+            print self.mean
             segmentation = segmentation >= 3
             print self.get_locations()
             subject = subject.astype(np.float32)
@@ -104,10 +105,9 @@ if __name__ == "__main__":
     print i
         """
         
-    filename = "D:/data/subset7/subset7/1.3.6.1.4.1.14519.5.2.1.6279.6001.105495028985881418176186711228.mhd"
-    labelname = "D:/data/seg-lungs-LUNA16/1.3.6.1.4.1.14519.5.2.1.6279.6001.105495028985881418176186711228.mhd"
+
     i=0
-    for batch, labels in tqdm(ImageReader()):
+    for batch, labels, name in tqdm(ImageReader(meta_data = 'image_stats.stat')):
        i=1 
         
 
