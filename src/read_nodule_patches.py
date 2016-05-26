@@ -33,8 +33,9 @@ class NoduleReader:
     """
     Class balance = n_nodule_pixels/n_non_nodule_pixels
     """
+
     def __init__(self, batch_size = 1000, shuffle = True, class_balance = 0.4, meta_data = 'image_stats.stat', label_path = lbl_path, patch_shape = (64,64)):
-        
+
         if not os.path.isfile(meta_data):
             preprocess.preprocess()
         
