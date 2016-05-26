@@ -21,7 +21,7 @@ else:
     lbl_path = 'D:/data/seg-lungs-LUNA16/'
 
 
-class Reader:
+class ImageReader:
 
     def __init__(self, meta_data = 'test_set.stat', label_path = lbl_path):
         
@@ -44,11 +44,12 @@ class Reader:
         return self
 
     def next(self):
-        if self.current >self.n_samples-1:
+        if self.current >10:#self.n_samples-1:
             raise StopIteration
         else:
 
-            subject, segmentation = load_itk_images(*self.get_locations())
+            image_location, label_locations, subject_name = self.get_locations()
+            subject, segmentation = load_itk_images(image_location, label_locations)
             subject = subject - self.mean
             segmentation = segmentation >= 3
             print self.get_locations()
@@ -56,17 +57,18 @@ class Reader:
             segmentation = segmentation.astype(np.float32)
             
             self.current+=1
-            return subject, segmentation
+            return subject, segmentation, subject_name
 
 
     def get_locations(self):
         
         image_location = self.file_names[self.current]
         split = image_location.split('/')
+        subject_name = split[-1]
         #label_location = os.path.join(self.label_path, split[-1]) does not work on windows 
-        label_location = self.label_path + split[-1]
+        label_location = self.label_path + subject_name
         
-        return image_location, label_location
+        return image_location, label_location, subject_name
     
     
 
@@ -105,7 +107,7 @@ if __name__ == "__main__":
     filename = "D:/data/subset7/subset7/1.3.6.1.4.1.14519.5.2.1.6279.6001.105495028985881418176186711228.mhd"
     labelname = "D:/data/seg-lungs-LUNA16/1.3.6.1.4.1.14519.5.2.1.6279.6001.105495028985881418176186711228.mhd"
     i=0
-    for batch, labels in tqdm(Reader()):
+    for batch, labels in tqdm(ImageReader()):
        i=1 
         
 
