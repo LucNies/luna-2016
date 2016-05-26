@@ -42,7 +42,7 @@ filter_size = (3,3)
 learning_rate = 0.000001
 n_filters = 12 #64
 n_dense = 1024 #4096
-n_epochs = 50
+n_epochs = 100
 n_batches = 1
 
 
@@ -181,22 +181,27 @@ def training(network, train_X, train_Y, val_X, val_Y):
         start_time = time.time()
         #for batch in iterate_minibatches(train_X, train_Y, 32, shuffle=True):
         print "epoch {}...".format(epoch)
-        for inputs, targets in tqdm(NoduleReader()):
+        reader = NoduleReader()
+        print "n_samples: {}".format(reader.n_samples)
+        for inputs, targets in tqdm(reader):
             
             
             loss, l2_loss, prediction = train_fn(inputs, targets)
             targets = [label.argmax() for label in targets]
+            """
             for i, label in enumerate(targets):
                 print inputs.shape
                 print  label
                 plt.imshow(inputs[i, 0, :, :], cmap='gray')
                 plt.show()
-                
+            """    
             
             
             train_err += loss
             train_batches+=1
-            break
+            #print "Current subject: {} current slice: {}".format(reader.current, reader.current_slice)
+            #print "n positve labels: {}".format(sum(targets))
+            
             
             
 
@@ -210,14 +215,15 @@ def training(network, train_X, train_Y, val_X, val_Y):
         val_loss = 0
         conf_matrix = np.zeros((2,2))
         #Validationset
-        for inputs, targets in tqdm(NoduleReader(meta_data = 'validation_set.stat')):
+        reader = NoduleReader(meta_data = 'validation_set.stat')
+        for inputs, targets in tqdm(reader):
             test_prediction, test_loss = val_fn(inputs, targets)
             target_labels = [label.argmax() for label in targets]
             pred_labels = [label.argmax() for label in test_prediction]
             conf_matrix += confusion_matrix(target_labels, pred_labels, labels = [0,1])
             val_loss += test_loss
             val_batches += 1
-            break
+            
                 
         dice = dice_score(conf_matrix)
             
@@ -227,7 +233,7 @@ def training(network, train_X, train_Y, val_X, val_Y):
 
         
         print "save model..."
-        np.savez('../networks/lung_segmentation/network_epoch{}.npz'.format(epoch), *lasagne.layers.get_all_param_values(network))
+        np.savez('../networks/nodule_segmentation/network_epoch{}.npz'.format(epoch), *lasagne.layers.get_all_param_values(network))
         
         
     print "Total runtime: " +str(time.time()-begin)

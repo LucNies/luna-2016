@@ -33,7 +33,7 @@ class NoduleReader:
     """
     Class balance = n_nodule_pixels/n_non_nodule_pixels
     """
-    def __init__(self, batch_size = 1000, shuffle = True, class_balance = 0.8, meta_data = 'image_stats.stat', label_path = lbl_path, patch_shape = (64,64)):
+    def __init__(self, batch_size = 1000, shuffle = True, class_balance = 0.4, meta_data = 'image_stats.stat', label_path = lbl_path, patch_shape = (64,64)):
         
         if not os.path.isfile(meta_data):
             preprocess.preprocess()
@@ -92,7 +92,7 @@ class NoduleReader:
                         n_batches += 1
                         self.current_slice += 1 
                         
-                        #batch is completed but still in subject still has some slices left
+                        #batch is completed but still in subject and there are still some slices left
                         if n_batches*n_patches >= self.batch_size:
                             
                             #Shuffle batches
@@ -205,7 +205,21 @@ def load_subject(input_path, target_path):
 
 if __name__ == "__main__":
         
-    reader = NoduleReader()
+    reader = NoduleReader()#meta_data = 'validation_set.stat'
+    
     for patch, labels in tqdm(reader):
-        print labels.sum()
+       # if labels.argmax().sum() > 0:
+        print "Current subject: {} current slice: {}".format(reader.current, reader.current_slice)
+        print "n positve labels: {}".format(sum(labels))
+        
+        
+    
+    
+    """
+    for i, label in enumerate(labels):
+        print patch.shape
+        print  label
+        plt.imshow(patch[i, 0, :, :], cmap='gray')
+        plt.show()
+    """
 

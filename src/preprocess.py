@@ -80,5 +80,5 @@ def get_subject_name(file_name):
     
 
 if __name__ == '__main__' :
-    preprocess(out_name = 'test_set.stat', subsets = [9])
+    preprocess(out_name = 'validation_set.stat', subsets = [8])
 

@@ -10,6 +10,9 @@ from read_data_m import load_itk_images
 
 if getpass.getuser().lower() == "steven":
     data_dir = os.path.join("F:/Temp/CAD/data")
+elif getpass.getuser().lower() == 'the mountain':
+    data_dir = os.path.join('D:/data/')
+    
 else:
     data_dir = os.path.join("..", "data")
 
@@ -43,7 +46,7 @@ class Annotator:
         for i in range(-r[0]-5, r[0] + 5):
             for j in range(-r[1]-5, r[1] + 5):
                 for k in range(-r[2]-5, r[2] + 5):
-                    if Annotator.dist((i, j, k), r) <= 2:
+                    if Annotator.dist((i, j, k), r) <= 1:# was 2 once
                         if x+i >= 0 and y+j >= 0 and z+k >= 0:
                             if x+i < self.slice_shape[0] and y+j < self.slice_shape[1] and z+k < self.slice_shape[2]:
                                 yield (x + i, y + j, z + k)
@@ -132,7 +135,7 @@ if __name__ == "__main__":
 
     # Get files
     files = []
-    for i in range(1):
+    for i in range(10):
         files.extend(glob.glob(os.path.join(data_dir, 'subset%i' % i) + "/*.mhd"))
     
     files = [x.split(os.sep)[-1] for x in files]

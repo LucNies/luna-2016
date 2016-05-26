@@ -6,7 +6,7 @@ Created on Wed May 18 00:04:46 2016
 """
 
 from stitch_m import create_network
-from read_images import Reader
+from read_images import ImageReader
 from tqdm import tqdm
 import lasagne
 import numpy as np
@@ -50,9 +50,9 @@ def shift(inputs, network):
         for j in range(n_shifts[1]):
             yield shift_matrix(inputs, (i,j))
 
-def load_network(network_path = '../networks/trained_segmentation/'):
+def load_network(network_path = '../networks/trained_segmentation/network_epoch24.npz'):
     network = create_network()
-    with np.load(network_path + 'network_epoch24.npz') as f:
+    with np.load(network_path) as f:
         param_values = [f['arr_%d' % i] for i in range(len(f.files))]
         
     lasagne.layers.set_all_param_values(network, param_values)
@@ -71,7 +71,7 @@ def fix(predictions, width, height):
 def test():
     network = load_network()
     
-    reader = Reader()
+    reader = ImageReader()
     for inputs, targets in tqdm(reader):
         predictions = np.zeros((targets.shape[0], targets.shape[1]+1, targets.shape[2]+1))
         
@@ -110,12 +110,12 @@ def test():
             fixed_predictions = fix(predictions, width+1, height+1)
             
 
-            plt.imshow(fixed_predictions[60, :, :], cmap='gray')
-            plt.savefig(str(i) + '.png')
+            #plt.imshow(fixed_predictions[60, :, :], cmap='gray')
+            #plt.savefig(str(i) + '.png')
             
-        predictions = predictions[:, :512, :512]
+        predictions = fixed_predictions[:, :512, :512]
 
-        print "Accuracy: {}".format(dice_score(predictions, targets))
+        print "Accuracy: {}".format(dice_score(fixed_predictions, targets))
     return
 
 if __name__ == '__main__':
