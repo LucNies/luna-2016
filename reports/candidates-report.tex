@@ -46,9 +46,6 @@
 %
 \maketitle
 %
-\begin{abstract}
-Write your abstract here.
-\end{abstract}
 
 
 % Introduction
@@ -113,25 +110,24 @@ A simple way to reduce False Positives is to remove connected components smaller
 We used a second approach for detection lung nodule candidates which is the more conventional approach of using their blob-like structure. The first step is applying the lung segmentation as a mask on the lung CT images to reduce the search space to the actual lungs. The algorithm for the actual candidate detection is as follows:
 
 \begin{itemize}
-\item Apply two different sized Laplacian of Gaussian (LoG) filters. A LoG filter is circular-symmetric and thus widely used for blob detection, but has a maximum response to a particular blob size. We combined two filters with normalized kernels (IS THIS NORMALIZED?), the first with $\sigma = 3$ and \emph{kernel extent} = 7 and the second with $\sigma = 5$ and \emph{kernel extent} = 11 CHECK VALUES. We chose these parameters based on the paper of Van de Leemput et al. \cite{leemput}, who used LoG filters for pulmonary nodule detection in the \emph{ANODE09} challenge.
+\item Apply two different sized Laplacian of Gaussian (LoG) filters. A LoG filter is circular-symmetric and thus widely used for blob detection, but has a maximum response to a particular blob size. We combined two filters, the first with $\sigma = 3$ and \emph{kernel extent} = 7 and the second with $\sigma = 5$ and \emph{kernel extent} = 11. We chose these parameters based on the paper of Van de Leemput et al. \cite{leemput}, who used LoG filters for pulmonary nodule detection in the \emph{ANODE09} challenge.
 \item Take the pixel-wise maximum of the results of the LoGs to combine them to one result.
-\item Threshold the resulting image with value THRESHOLDVALUEAFTERLOGS. See Figure \ref{figure:LoGresult} for an example result. This value is established by sampling the values of known nodules and healthy lung tissue.
+\item Threshold the resulting image with value 10000. See Figure \ref{figure:LoGresult} for an example result. This value is established by sampling the values of known nodules and healthy lung tissue.
 	\begin{figure}[h]
 	\centering
-	{\includegraphics[width=0.7\linewidth]{./figure.png}}
+	{\includegraphics[width=0.7\linewidth]{./after_LoG.jpg}}
 	\caption{The thresholded image after taking the maximum of the two LoGs. \label{figure:LoGresult}}
 	\end{figure}
-\item Do a connected component analysis on the resulting image, and select only components with values between CONNECTEDCOMPONENTSVOLUMEVALUES. This identifies the initial candidates. See Figure \ref{figure:conncomp} for an example result.
+\item Do a connected component analysis on the resulting image, and select only components with voxel sizes between 1 and 100. This identifies the initial candidates. See Figure \ref{figure:conncomp} for an example result.
 	\begin{figure}[h]
 	\centering
-	{\includegraphics[width=0.7\linewidth]{./figure.png}}
+	{\includegraphics[width=0.7\linewidth]{./after_comp.png}}
 	\caption{The result of applying a connected component analysis on the image shown in Figure \ref{figure:LoGresult}. \label{figure:conncomp}}
 	\end{figure}
-\item Threshold the resulting image again with value THRESHOLD2VALUE.
-\item Apply dilation with a kernel of KERNELVALUE to increase the radius of the predicted candidates, i.e. predicted candidates will better correspond to lung nodule location. For example, if the prediction is only ten pixels removed from the actual nodule, this is really close in an image of 512 $\times$ 512 $\times$ \textit{ amount of slices} pixels. We still want this candidate to match with the ground truth.  See Figure \ref{figure:dilationresult} for an example result.
+\item Apply dilation with a spherical kernel of size 20x20x10 to increase the radius of the predicted candidates, i.e. predicted candidates will better correspond to lung nodule location. For example, if the prediction is only ten pixels removed from the actual nodule, this is really close in an image of 512 $\times$ 512 $\times$ \textit{ amount of slices} pixels. We still want this candidate to match with the ground truth.  See Figure \ref{figure:dilationresult} for an example result.
 	\begin{figure}[h]
 	\centering
-	{\includegraphics[width=0.7\linewidth]{./figure.png}}
+	{\includegraphics[width=0.7\linewidth]{./after_dilation.jpg}}
 	\caption{An example result after applying dilation. \label{figure:dilationresult}}
 	\end{figure}
 \end{itemize}
@@ -151,26 +147,23 @@ As already noted in section \ref{sec:fcn} we managed to get a very good patch-wi
 \end{figure}
 
 \subsection{Candidate extraction using Laplacian of Gaussian}
-The results are based on the first 30 (AMOUNT) images in subset 9 of the dataset. The results are evaluated using the recall of the ground truth candidates given for this phase of the assignment, compared to our predicted nodule candidates. The reason that the results are only examined on SUBSET images is that this method is very time consuming (over ten minutes per image) and we continued tuning parameters and thereby improving our recall score relatively close to the deadline.
+The results are based on the first 30 images in subset 9 of the dataset. The results are evaluated using the recall of the ground truth candidates given for this phase of the assignment, compared to our predicted nodule candidates. The reason that the results are only examined on SUBSET images is that this method is very time consuming (over ten minutes per image) and we continued tuning parameters and thereby improving our recall score relatively close to the deadline.
 
-The average recall obtained by this method is MEANRECALLSCORE, with a standard deviation of STDRECALLSCORE. This score is relatively low, especially considering the high standard deviation. Additionally, increasing the recall drastically increased the total amount of predicted candidates which means there are a lot of false positives. However, the main goal of this method is to include all nodules in our candidates. Thus, it was important to reach a recall as high as possible, and we will worry about reducing the false positives later.
-
-% Discussion
-\section{Discussion}\label{sec:discussion}
+The average recall obtained by this method is 0.67, with a standard deviation of 0.40. This score is relatively low, especially considering the high standard deviation. Additionally, increasing the recall drastically increased the total amount of predicted candidates which means there are a lot of false positives. However, the main goal of this method is to include all nodules in our candidates. Thus, it was important to reach a recall as high as possible, and we will worry about reducing the false positives later.
 
 
 \appendix
 \section{Contributions}
 \textbf{Luc Nies:} Final adjustments to the fully convolutional network so that it worked on the lung segmentation. Created the FCN pipeline, tested a lot of possible network and input parameters. Final adjustments to shift and stitch, and reading in of data. Wrote about the network architecture, parts of the nodule detection with FCN section and FCN conclusion.\\
 \\
-\textbf{Tom van de Poll:} \\
+\textbf{Tom van de Poll:} contributed to creating the MevisLab candidate detection method using LoG. Main contributer and responsible for final implementation and testing of the MeVisLab candidate detection method. Contributed to the results section of the LoG method in the report.\\
 \\
 \textbf{Harmen Prins:} Made annotation to pixel converter. Made initial shift-and-stitch. Convert NN output to coordinates. FROC analysis. Wrote report section on FROC analysis.
 \\
 \\
 \textbf{Steven Reitsma:} Helped building the fully convolutional network to work correctly. Fixed buggy shift and stitch method. Created 3D nodule masks. Wrote report sections on fully convolutional network. \\
 \\
-\textbf{Inez Wijnands:} Contributed to creating the MeVisLab candidate detection method using blob detection. Wrote introduction section and sections on the conventional approach in report.
+\textbf{Inez Wijnands:} Contributed to creating the MeVisLab candidate detection method using LoG. Wrote introduction section and sections on the conventional approach in report.
 
 % References should be produced using the bibtex program from suitable
 % BiBTeX files (here: strings, refs, manuals). The IEEEbib.bst bibliography
