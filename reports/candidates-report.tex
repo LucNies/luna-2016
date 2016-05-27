@@ -124,6 +124,12 @@ In Figure \ref{bestwellon} you can see the successful result of using the full l
 \subsubsection{Nodule detection with Fully Convolutional Networks}
 We employ the exact same technique for nodule detection. The only difference is in the labels. Whereas we use the segmentation masks as the labels in the lung segmentation task, we now use nodule masks. We parsed the annotations.csv file and from this generated 3D masks that can be used as labels in the fully convolutional network. One extra challenge here is the extreme class imbalance. Even in the lung segmentation task, the class imbalance was something that we could not ignore. In that task, we employed class balancing by enforcing our minibatches to have a 50/50 split in terms of positive and negative samples. For the nodule detection task, this is harder, since we have even less positive samples. Even with data augmentation, the amount of positive samples is still too few. Due to time constraints and bugs left over in our implementation from the previous phase, we were as of yet unable to get this method to work. We will continue working on it during the next week. We know where the problem is (class imbalance) so we are positive we will get this method to work within a week.
 
+\subsubsection{Analysing results with FROC}
+An often used measure for analysing the results of a nodule detection task is FROC \cite{froc}. It is based off of the Receiver Operating Characteristic ROC measure, which I will explain first. The ROC measure  plots two variables against each other: the False Positive Rate and the True Positive Rate. The ROC curve is created by setting the decision threshold for a system and then evaluating the TPR and FPR and repeat this for all relevant thresholds. The resulting curve then shows how good a system is and how well it works if high sensitivity or high recall is required.
+
+FROC extends the ROC measure by allowing for free responses as opposed to simple classification. Since not every lung contains a nodule and some contain multiple nodules, it is not known how many nodules there are. To compensate, the FPR is replaced by non-lesion location factor (NLF), the number of wrong responses (not close to a nodule) divided by the number of images. As a consequence, this number can go over 1. Often, the plot is capped at 1.
+
+To calculate the FROC, responses are needed in the form of coordinates within the lungs. The distance between these responses and the true nodules can be calculated so that the FPR and NLF can be deduced. To convert the output of the network, a confidence measure for every pixel, to coordinates with confidence measures, some post-processing is required. Firstly, we do a connected-component analysis on the pixels to find all blobs. Secondly, for every connected component we calculate the confidence and coordinate. The coordinate is a simple weighted or unweighted average of the pixels in the component. The confidence of a set of confidences is not immediately obvious and thus may require more tuning. For now, we used the mean of the confidences.
 \subsection{Extracting candidates using Laplacian of Gaussian}
 We used a second approach for detection lung nodule candidates which is the more conventional approach of using their blob-like structure. The first step is applying the lung segmentation as a mask on the lung CT images to reduce the search space to the actual lungs. The algorithm for the actual candidate detection is as follows:
 
@@ -175,7 +181,8 @@ The average recall obtained by this method is MEANRECALLSCORE, with a standard d
 \\
 \textbf{Tom van de Poll:} \\
 \\
-\textbf{Harmen Prins:} \\
+\textbf{Harmen Prins:} Made annotation to pixel converter. Made initial shift-and-stitch. Convert NN output to coordinates. FROC analysis. Wrote report section on FROC analysis.
+\\
 \\
 \textbf{Steven Reitsma:} Helped building the fully convolutional network to work correctly. Fixed buggy shift and stitch method. Created 3D nodule masks. Wrote report sections on fully convolutional network. \\
 \\
