@@ -143,12 +143,11 @@ We used a second approach for detection lung nodule candidates which is the more
 	\caption{The result of applying a connected component analysis on the image shown in Figure \ref{figure:LoGresult}. \label{figure:conncomp}}
 	\end{figure}
 \item Threshold the resulting image again with value THRESHOLD2VALUE.
-\item Apply a Hough transform to identify unwanted candidates, i.e. candidates with features not corresponding to lung nodule characteristics.
-\item Threshold the resulting image again VALUE to remove the candidates identified by the Hough transform and keep the lung nodule candidates. See Figure \ref{figure:Houghresult} for an example result.
+\item Apply dilation with a kernel of KERNELVALUE to increase the radius of the predicted candidates, i.e. predicted candidates will better correspond to lung nodule location. For example, if the prediction is only ten pixels removed from the actual nodule, this is really close in an image of 512 $\times$ 512 $\times$ \textit{ amount of slices} pixels. We still want this candidate to match with the ground truth.  See Figure \ref{figure:dilationresult} for an example result.
 	\begin{figure}[h]
 	\centering
 	{\includegraphics[width=0.7\linewidth]{./figure.png}}
-	\caption{An example result after applying the Hough transform and thresholding. \label{figure:Houghresult}}
+	\caption{An example result after applying dilation. \label{figure:dilationresult}}
 	\end{figure}
 \end{itemize}
 ADD IMAGES
