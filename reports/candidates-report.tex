@@ -58,30 +58,6 @@ In the \emph{LUng Nodule Analysis 2016 (LUNA16)} challenge, we aim to detect pul
 
 We continued working on the deep learning approach we used for the previous phase. In that phase we worked on lung segmentation and for this phase we treated candidate detection again as a segmentation problem. Secondly, we also used an image processing approach where we use the features of nodules such as blobness for candidate detection. These approaches and their results are explained more detailed in the following sections.
 
-% Table
-\begin{table}[h]
-\caption{\small{Caption here.}}
-\label{tab:parameters}
-\centering
-\begin{tabular}{c | c | l}
-text & text & text\\
-\hline \hline
-text & text & text
-\end{tabular}
-\end{table}
-
-You can include figures as follows:
-
-% Figure
-\begin{figure}[h]
-\centering
-\subfigure[]
-{\includegraphics[width=0.7\linewidth]{./figure.png}}
-\subfigure[]
-{\includegraphics[width=0.7\linewidth]{./figure.png}}
-\caption{Caption here. \label{figure:patterns}}
-\end{figure}
-
 % Method
 \section{Method}\label{sec:method}
 
@@ -122,7 +98,8 @@ In Figure \ref{bestwellon} you can see the successful result of using the full l
 \end{figure}
 
 \subsubsection{Nodule detection with Fully Convolutional Networks}
-We employ the exact same technique for nodule detection. The only difference is in the labels. Whereas we use the segmentation masks as the labels in the lung segmentation task, we now use nodule masks. We parsed the annotations.csv file and from this generated 3D masks that can be used as labels in the fully convolutional network. One extra challenge here is the extreme class imbalance. Even in the lung segmentation task, the class imbalance was something that we could not ignore. In that task, we employed class balancing by enforcing our minibatches to have a 50/50 split in terms of positive and negative samples. For the nodule detection task, this is harder, since we have even less positive samples. Even with data augmentation, the amount of positive samples is still too few. Due to time constraints and bugs left over in our implementation from the previous phase, we were as of yet unable to get this method to work. We will continue working on it during the next week. We know where the problem is (class imbalance) so we are positive we will get this method to work within a week.
+\label{sec:fcn}
+We employ the exact same technique for nodule detection. The only difference is in the labels. Whereas we use the segmentation masks as the labels in the lung segmentation task, we now use nodule masks. We parsed the annotations.csv file and from this generated 3D masks that can be used as labels in the fully convolutional network. One extra challenge here is the extreme class imbalance. Even in the lung segmentation task, the class imbalance was something that we could not ignore. In that task, we employed class balancing by enforcing our minibatches to have a 50/50 split in terms of positive and negative samples. For the nodule detection task, this is harder, since we have even less positive samples. Even with data augmentation, the amount of positive samples is still too few. We therefore chose to create a minibatch split of 80/20 percent. This worked rather well for training. Patch-wise validation on a balanced test set also creates rather good results with a recall of 0.98 and a precision of 0.89. However, in the test set the balance is completely different. This causes the score metrics to look different. Our recall drops to 0.77 and our Dice score drops to 0.0006, indicating exceptionally bad results. We expect this problem to be due to the huge class imbalance. Possible approaches to tackle this problem is by trying different class balance ratios, or by only training on pixels which are part of the lungs (we currently train on all the possible pixels). Due to time constraints we were as of yet unable to get this method to work completely, as trying different training schemes is very time consuming. We will continue working on it during the next week since we can also use this method for false positive reduction. 
 
 \subsubsection{Analysing results with FROC}
 An often used measure for analysing the results of a nodule detection task is FROC \cite{froc}. It is based off of the Receiver Operating Characteristic ROC measure, which I will explain first. The ROC measure  plots two variables against each other: the False Positive Rate and the True Positive Rate. The ROC curve is created by setting the decision threshold for a system and then evaluating the TPR and FPR and repeat this for all relevant thresholds. The resulting curve then shows how good a system is and how well it works if high sensitivity or high recall is required.
@@ -158,7 +135,6 @@ We used a second approach for detection lung nodule candidates which is the more
 	\caption{An example result after applying dilation. \label{figure:dilationresult}}
 	\end{figure}
 \end{itemize}
-ADD IMAGES
 
 % Experiments
 %\section{Experiments}\label{sec:experiments}
@@ -166,7 +142,13 @@ ADD IMAGES
 % Results
 \section{Results}\label{sec:results}
 \subsection{Candidate segmentation using the FCN}
-None as of yet.
+As already noted in section \ref{sec:fcn} we managed to get a very good patch-wise score on a balanced validation set (recall of 0.98 and precision of 0.89), but due to the huge amount of negative pixels in the unbalanced test set, it performed very poorly as it classified a lot of negative pixels as positive. An example of a result is shown in figure \ref{figure:nodules}. This version of the network achieved a recall of 0.77 with and std of 0.33. The dice score was 0.006. 
+
+\begin{figure}[h]
+	\centering
+	{\includegraphics[width=0.7\linewidth]{./niet_zo_goed.png}}
+	\caption{The upper image shows the nodule mask, the lower image shows the result of the FCN. \label{figure:nodules}}
+\end{figure}
 
 \subsection{Candidate extraction using Laplacian of Gaussian}
 The results are based on the first 30 (AMOUNT) images in subset 9 of the dataset. The results are evaluated using the recall of the ground truth candidates given for this phase of the assignment, compared to our predicted nodule candidates. The reason that the results are only examined on SUBSET images is that this method is very time consuming (over ten minutes per image) and we continued tuning parameters and thereby improving our recall score relatively close to the deadline.
@@ -179,7 +161,7 @@ The average recall obtained by this method is MEANRECALLSCORE, with a standard d
 
 \appendix
 \section{Contributions}
-\textbf{Luc Nies:} Final adjustments to the fully convolutional network so that it worked on the lung segmentation. Created the FCN pipeline, tested a lot of possible network and input parameters. Final adjustments to shift and stitch, and reading in of data. Wrote about the network architecture and parts of the nodule detection with FCN section.\\
+\textbf{Luc Nies:} Final adjustments to the fully convolutional network so that it worked on the lung segmentation. Created the FCN pipeline, tested a lot of possible network and input parameters. Final adjustments to shift and stitch, and reading in of data. Wrote about the network architecture, parts of the nodule detection with FCN section and FCN conclusion.\\
 \\
 \textbf{Tom van de Poll:} \\
 \\
