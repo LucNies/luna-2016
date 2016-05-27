@@ -80,7 +80,11 @@ def one_froc(annotation, predictions, t, filename):
     centers, confidence = get_centers(predictions)
     centers = [cc[0] for cc in zip(centers, confidence) if cc[1] >= t]
     im_filename = os.path.basename(filename)[:-4]
-    centers = [to_world(center, im_filename) for center in centers]
+    centers = []
+    for center in centers:
+        try:
+            centers.append(to_world(center, im_filename))
+        finally: pass
     for center in tqdm(centers):
         for lesion in annotation:
             if dist(lesion, center) < lesion[4]:
