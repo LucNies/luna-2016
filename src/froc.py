@@ -82,9 +82,7 @@ def one_froc(annotation, predictions, t, filename):
     im_filename = os.path.basename(filename)[:-4]
     centers = []
     for center in centers:
-        try:
-            centers.append(to_world(center, im_filename))
-        finally: pass
+        centers.append(to_world(center, im_filename))
     for center in tqdm(centers):
         for lesion in annotation:
             if dist(lesion, center) < lesion[4]:
@@ -129,11 +127,13 @@ def count_lesions():
 def calculate_froc(filenames, predictions):
     L = []
     for filename, prediction in tqdm(izip(filenames, predictions)):
-        annotation = load_annotation(filename)
-        thresholds = set(prediction.flatten())
-        for t in tqdm(thresholds):
-            LL, NL = one_froc(annotation, prediction, t, filename)
-            L.append((t, LL, NL))
+        try:
+            annotation = load_annotation(filename)
+            thresholds = set(prediction.flatten())
+            for t in tqdm(thresholds):
+                LL, NL = one_froc(annotation, prediction, t, filename)
+                L.append((t, LL, NL))
+        finally: pass
 
     L.sort(key=lambda x: x[0])
     L = grab_right_t(L)
