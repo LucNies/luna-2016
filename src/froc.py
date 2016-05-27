@@ -7,7 +7,7 @@ import SimpleITK as sitk
 from math import sqrt
 
 import numpy as np
-from scipy.ndimage import center_of_mass, label
+from scipy.ndimage import center_of_mass, label, measurements
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
@@ -30,6 +30,8 @@ with open(annotation_filename) as annotationstream:
 
 
 def load_annotation(filename):
+    if filename.endswith(".npz"):
+        filename = filename[:-4]
     if filename.endswith(".mhd"):
         filename = filename[:-4]
     return [a for a in annotations if a[0] == filename]
@@ -49,12 +51,16 @@ def calc_conf(vs):
 
 
 def get_centers(predictions):
+    min_area = 20
     predictions_b = predictions > 0.5
     lbl, ncenters = label(predictions_b)
-    centers = center_of_mass(predictions_b, lbl, [i+1 for i in range(ncenters)])
+    counts = measurements.sum(lbl>0, lbl, index=[i+1 for i in range(ncenters)])
+    relevant = [i+1 for i, c in enumerate(counts) if c > min_area]
+    #ncenters = len(relevant)
+    centers = center_of_mass(predictions_b, lbl, relevant)
 
     confs = []
-    for i in range(ncenters):
+    for i in relevant:
         vs = predictions[lbl == (i+1)] # +1 needed since 0 is background
         confs.append(calc_conf(vs))
     return centers, confs
@@ -62,7 +68,7 @@ def get_centers(predictions):
 
 def to_world(center, fn):
     fn = Annotator.search_file(fn)
-    itkimage = sitk.ReadImage(os.path.join(data_dir, fn))
+    itkimage = sitk.ReadImage(fn)
     origin = np.array(list(reversed(itkimage.GetOrigin())))
     spacing = np.array(list(reversed(itkimage.GetSpacing())))
     return np.array(center) * np.array(spacing) + np.array(origin)
@@ -73,8 +79,9 @@ def one_froc(annotation, predictions, t, filename):
     LN = 0
     centers, confidence = get_centers(predictions)
     centers = [cc[0] for cc in zip(centers, confidence) if cc[1] >= t]
-    centers = [to_world(center, filename) for center in centers]
-    for center in centers:
+    im_filename = os.path.basename(filename)[:-4]
+    centers = [to_world(center, im_filename) for center in centers]
+    for center in tqdm(centers):
         for lesion in annotation:
             if dist(lesion, center) < lesion[4]:
                 LL+=1
@@ -117,10 +124,10 @@ def count_lesions():
 
 def calculate_froc(filenames, predictions):
     L = []
-    for filename, prediction in izip(filenames, predictions):
+    for filename, prediction in tqdm(izip(filenames, predictions)):
         annotation = load_annotation(filename)
         thresholds = set(prediction.flatten())
-        for t in thresholds:
+        for t in tqdm(thresholds):
             LL, NL = one_froc(annotation, prediction, t, filename)
             L.append((t, LL, NL))
 
@@ -135,6 +142,7 @@ def calculate_froc(filenames, predictions):
 
 if __name__ == "__main__":
 
+    """
     def generate_annotations(filenames):
         for filename in filenames:
             A = Annotator(filename)
@@ -146,7 +154,18 @@ if __name__ == "__main__":
 
     files = [x.split(os.sep)[-1] for x in files][:1]
 
+
     froc = calculate_froc(files, generate_annotations(files))
+    """
+    seg_dir = os.path.join("..", "data", "seg_nodules")
+    files = [os.path.join(seg_dir, f) for f in os.listdir(seg_dir)]
+
+    def yield_predictions():
+        for f in files:
+            yield np.load(f)['arr_0']*1
+
+
+    froc = calculate_froc(files, yield_predictions())
     plt.scatter(*zip(*froc))
     plt.show()
     raw_input("Press [Enter] to finish")

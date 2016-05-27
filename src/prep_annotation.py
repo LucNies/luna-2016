@@ -62,6 +62,8 @@ class Annotator:
 
     @staticmethod
     def search_file(fn):
+        if os.path.exists(fn):
+            return fn
         for i in range(10):
             fullname = os.path.join(data_dir, "subset{}".format(i), fn)
             if os.path.exists(fullname):
@@ -74,7 +76,6 @@ class Annotator:
         origin = np.array(list(reversed(itkimage.GetOrigin())))
         spacing = np.array(list(reversed(itkimage.GetSpacing())))
         self.slice_shape = np.array(list(reversed(itkimage.GetSize())))
-        print "Slice shape in prep_annotation.get_spacing: {}".format(self.slice_shape)
         return origin, spacing
 
     def prep(self):
