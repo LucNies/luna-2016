@@ -58,30 +58,6 @@ In the \emph{LUng Nodule Analysis 2016 (LUNA16)} challenge, we aim to detect pul
 
 We continued working on the deep learning approach we used for the previous phase. In that phase we worked on lung segmentation and for this phase we treated candidate detection again as a segmentation problem. Secondly, we also used an image processing approach where we use the features of nodules such as blobness for candidate detection. These approaches and their results are explained more detailed in the following sections.
 
-% Table
-\begin{table}[h]
-\caption{\small{Caption here.}}
-\label{tab:parameters}
-\centering
-\begin{tabular}{c | c | l}
-text & text & text\\
-\hline \hline
-text & text & text
-\end{tabular}
-\end{table}
-
-You can include figures as follows:
-
-% Figure
-\begin{figure}[h]
-\centering
-\subfigure[]
-{\includegraphics[width=0.7\linewidth]{./figure.png}}
-\subfigure[]
-{\includegraphics[width=0.7\linewidth]{./figure.png}}
-\caption{Caption here. \label{figure:patterns}}
-\end{figure}
-
 % Method
 \section{Method}\label{sec:method}
 
@@ -122,7 +98,7 @@ In Figure \ref{bestwellon} you can see the successful result of using the full l
 \end{figure}
 
 \subsubsection{Nodule detection with Fully Convolutional Networks}
-We employ the exact same technique for nodule detection. The only difference is in the labels. Whereas we use the segmentation masks as the labels in the lung segmentation task, we now use nodule masks. We parsed the annotations.csv file and from this generated 3D masks that can be used as labels in the fully convolutional network. One extra challenge here is the extreme class imbalance. Even in the lung segmentation task, the class imbalance was something that we could not ignore. In that task, we employed class balancing by enforcing our minibatches to have a 50/50 split in terms of positive and negative samples. For the nodule detection task, this is harder, since we have even less positive samples. Even with data augmentation, the amount of positive samples is still too few. Due to time constraints and bugs left over in our implementation from the previous phase, we were as of yet unable to get this method to work. We will continue working on it during the next week. We know where the problem is (class imbalance) so we are positive we will get this method to work within a week.
+We employ the exact same technique for nodule detection. The only difference is in the labels. Whereas we use the segmentation masks as the labels in the lung segmentation task, we now use nodule masks. We parsed the annotations.csv file and from this generated 3D masks that can be used as labels in the fully convolutional network. One extra challenge here is the extreme class imbalance. Even in the lung segmentation task, the class imbalance was something that we could not ignore. In that task, we employed class balancing by enforcing our minibatches to have a 50/50 split in terms of positive and negative samples. For the nodule detection task, this is harder, since we have even less positive samples. Even with data augmentation, the amount of positive samples is still too few. We therefore chose to create a minibatch split of 80/20 percent. This worked rather well for training. Patch-wise validation on a balanced test set also creates rather good results with a recall of 0.98 and a precision of 0.89. However, in the test set the balance is completely different. This causes the score metrics to look different. Our recall drops to 0.77 and our Dice score drops to 0.0006, indicating exceptionally bad results. We expect this problem to be due to the huge class imbalance. Due to time constraints we were as of yet unable to get this method to work completely. We will continue working on it during the next week since we can also use this method for false positive reduction.
 
 \subsection{Extracting candidates using Laplacian of Gaussian}
 We used a second approach for detection lung nodule candidates which is the more conventional approach of using their blob-like structure. The first step is applying the lung segmentation as a mask on the lung CT images to reduce the search space to the actual lungs. The algorithm for the actual candidate detection is as follows:
