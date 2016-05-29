@@ -22,7 +22,7 @@ n_filters = 12 #64
 n_dense = 1024 #4096
 n_epochs = 100
 n_batches = 1
-starting_epoch = 6
+
 
 
 def training(network):
@@ -43,6 +43,7 @@ def training(network):
     params = lasagne.layers.get_all_params(network, trainable=True)
     updates = lasagne.updates.adam(loss, params, learning_rate=lr, beta1=0.9, beta2=0.999, epsilon=1e-08)
     train_fn = theano.function([X, Y], [loss, l2_loss, prediction], updates=updates, allow_input_downcast=True, on_unused_input='ignore')
+    
     """
     test_prediction = lasagne.layers.get_output(network, deterministic=True)
     test_loss = lasagne.objectives.categorical_crossentropy(test_prediction, targets)
@@ -89,7 +90,7 @@ def training(network):
             #print "Current subject: {} current slice: {}".format(reader.current, reader.current_slice)
             #print "n positve labels: {}".format(sum(targets))
             
-            break;
+            
             
 
         print("Epoch {} of {} took {:.3f}s".format(
@@ -116,15 +117,16 @@ def training(network):
             
         print "Validation loss: {}".format(val_loss/float(val_batches))
         print "Dice score: {}".format(dice) 
-        print "True positives: {} \n False negative: {} \nFalse positive {} \n True negatives {} (postive is lung, negative is background)".format(conf_matrix[0][0], conf_matrix[0][1], conf_matrix[1][0], conf_matrix[1][1])
+        print "True positives: {} \n False negative: {} \nFalse positive {} \n True negatives {} (postive is lung, negative is background)".format(conf_matrix[1][1], conf_matrix[0][1], conf_matrix[1][0], conf_matrix[0][0])
 
         
         print "save model..."
-        #np.savez('../networks/nodule_segmentation/network_epoch{}.npz'.format(epoch), *lasagne.layers.get_all_param_values(network))
+        np.savez('../networks/nodule_segmentation/network_epoch{}.npz'.format(epoch), *lasagne.layers.get_all_param_values(network))
         
         
     print "Total runtime: " +str(time.time()-begin)
     
 if __name__ == "__main__":
     network = load_network()
+    #network = create_network()
     training(network)

@@ -76,7 +76,7 @@ def create_network(n_filters = 12, n_dense = 1024, filter_size = (3,3)):
     network = output
     return network
 
-def load_network(network_path = '../networks/nodule_segmentation/network_epoch5.npz'):
+def load_network(network_path = '../networks/nodule_segmentation/network_epoch3.npz'):
 
     network = create_network()
     with np.load(network_path) as f:

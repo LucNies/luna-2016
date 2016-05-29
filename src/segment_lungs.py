@@ -110,8 +110,8 @@ def test():
             fixed_predictions = fix(predictions, width+1, height+1)
             
 
-            #plt.imshow(fixed_predictions[60, :, :], cmap='gray')
-            #plt.savefig(str(i) + '.png')
+            plt.imshow(fixed_predictions[60, :, :], cmap='gray')
+            plt.savefig(str(i) + '.png')
             
         predictions = fixed_predictions[:, :512, :512]
 

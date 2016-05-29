@@ -17,7 +17,7 @@ import os
 
 
 
-def test(network_path = '../networks/nodule_segmentation/network_epoch5.npz'):
+def test(network_path = '../networks/nodule_segmentation/network_epoch17.npz'):
     network = segment.load_network(network_path)
 
     reader = ImageReader()    
@@ -34,7 +34,7 @@ def test(network_path = '../networks/nodule_segmentation/network_epoch5.npz'):
         prediction = lasagne.layers.get_output(network, inputs=X)
         e_x = T.exp(prediction - prediction.max(axis=1, keepdims=True))
         out = (e_x / e_x.sum(axis=1, keepdims=True))
-        out = T.max(out, axis=1)
+        out = T.argmax(out, axis=1)
         test_fn = theano.function([X], out)
         
         i = 0
@@ -67,7 +67,7 @@ def test(network_path = '../networks/nodule_segmentation/network_epoch5.npz'):
         #plt.imshow(fixed_predictions[60, :, :])
         #plt.show()        
         
-        #np.savez_compressed('../segmentations/nodules/'+subject_name, fixed_predictions)
+        np.savez_compressed('../segmentations/nodules/'+subject_name, fixed_predictions)
 
         # Load: np.load(os.path.join(data_dir, 'candidates', f + '.npz'))['arr_0']
         #print "Accuracy: {}".format(dice_score(predictions, targets))

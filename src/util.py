@@ -34,9 +34,9 @@ def view_nodules(file_name):
         if segmentation[i].sum() > 0:            
             f, axarr = plt.subplots(2, sharex=True)
             #plt.imshow(prediction[i, :, :], cmap='gray')
-            axarr[0].imshow(segmentation[60, : , :], cmap='gray')
+            axarr[0].imshow(segmentation[i, : , :], cmap='gray')
             axarr[0].set_title('Segmentation mask, slice {}'.format(i))
-            axarr[1].imshow(prediction[60, : , :], cmap='gray')
+            axarr[1].imshow(prediction[i, : , :], cmap='gray')
             axarr[1].set_title('predictions, slice {}'.format(i))
             plt.show()
     
@@ -49,4 +49,4 @@ def dice_score(conf_matrix):
     
 
 if __name__ == '__main__':
-    view_nodules('1.3.6.1.4.1.14519.5.2.1.6279.6001.114914167428485563471327801935.mhd.npz')
+    view_nodules('1.3.6.1.4.1.14519.5.2.1.6279.6001.102681962408431413578140925249.mhd.npz')
