@@ -7,7 +7,7 @@ import SimpleITK as sitk
 from math import sqrt
 
 import numpy as np
-from scipy.ndimage import center_of_mass, label, measurements
+from scipy.ndimage import center_of_mass, label, measurements, find_objects
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
@@ -25,9 +25,10 @@ annotation_filename = os.path.join(data_dir, "CSVFILES/annotations.csv")
 annotations = []
 with open(annotation_filename) as annotationstream:
     annotationstream.next() # Skip header
-    for annotation in annotationstream:
-        annotations.append(annotation.split(","))
+    for _annotation in annotationstream:
+        annotations.append(_annotation.split(","))
 
+center_sizes = dict()
 
 def load_annotation(filename):
     if filename.endswith(".npz"):
@@ -50,19 +51,31 @@ def calc_conf(vs):
     return np.mean(vs)
 
 
+def adjust_slice_coordinates(cor, slices):
+    rel_cor = tuple([s.start for s in slices])  # Top-left
+    return tuple(c + rc for c, rc in zip(cor, rel_cor))
+
+
 def get_centers(predictions):
     min_area = 20
-    predictions_b = predictions > 0.5
+    predictions_b = (predictions > 0.5)
     lbl, ncenters = label(predictions_b)
-    counts = measurements.sum(lbl>0, lbl, index=[i+1 for i in range(ncenters)])
-    relevant = [i+1 for i, c in enumerate(counts) if c > min_area]
-    #ncenters = len(relevant)
-    centers = center_of_mass(predictions_b, lbl, relevant)
-
+    slices = find_objects(lbl)
+    centers = []
     confs = []
-    for i in relevant:
-        vs = predictions[lbl == (i+1)] # +1 needed since 0 is background
-        confs.append(calc_conf(vs))
+    for i, slice in enumerate(slices):
+        prediction_b = predictions_b[slice]
+        cur_label = lbl[slice] == (i+1)
+        count = measurements.sum(prediction_b, cur_label)
+        if center_sizes[count] is not None:
+            center_sizes[count]+=1
+        else:
+            center_sizes[count] =1
+        if count > min_area:
+            centers.append(adjust_slice_coordinates(center_of_mass(cur_label, prediction_b), slice))
+            vs = predictions[slice][cur_label]
+            confs.append(calc_conf(vs))
+
     return centers, confs
 
 
@@ -74,16 +87,16 @@ def to_world(center, fn):
     return np.array(center) * np.array(spacing) + np.array(origin)
 
 
-def one_froc(annotation, predictions, t, filename):
+def one_froc(centers, confidence, annotation, t, filename):
     LL = 0
     LN = 0
-    centers, confidence = get_centers(predictions)
     centers = [cc[0] for cc in zip(centers, confidence) if cc[1] >= t]
+
     im_filename = os.path.basename(filename)[:-4]
-    centers = []
+    wrld_centers = []
     for center in centers:
-        centers.append(to_world(center, im_filename))
-    for center in tqdm(centers):
+        wrld_centers.append(to_world(center, im_filename))
+    for center in tqdm(wrld_centers):
         for lesion in annotation:
             if dist(lesion, center) < lesion[4]:
                 LL+=1
@@ -105,7 +118,7 @@ def cumulative(L):
 
 
 def grab_right_t(L):
-    cur_t = L[0][0] # To prevent adding on for loop start
+    cur_t = L[0][0] # To prevent nL.append on first iteration
     cur_LL = 0
     cur_LN = 0
     nL = []
@@ -126,14 +139,25 @@ def count_lesions():
 
 def calculate_froc(filenames, predictions):
     L = []
-    for filename, prediction in tqdm(izip(filenames, predictions)):
+    files_tqdm = tqdm(izip(filenames, predictions), total=len(filenames))
+    for filename, prediction in files_tqdm:
         try:
+            Annotator.search_file(os.path.basename(filename)[:-4]) # Check if file exists
             annotation = load_annotation(filename)
             thresholds = set(prediction.flatten())
-            for t in tqdm(thresholds):
-                LL, NL = one_froc(annotation, prediction, t, filename)
-                L.append((t, LL, NL))
-        finally: pass
+            if len(thresholds) > 100:
+                thresholds = sorted(thresholds)
+                thresholds = thresholds[::len(thresholds)/100]
+
+            print "Calculating FROC for {}".format(filename)
+            centers, confidence = get_centers(prediction)
+            for t in thresholds:
+                LL, LN = one_froc(centers, confidence, annotation, t, filename)
+                L.append((t, LL, LN))
+            print "Processed {}".format(filename)
+        except Exception:
+            print "Skipping {}".format(filename)
+    files_tqdm.close()
 
     L.sort(key=lambda x: x[0])
     L = grab_right_t(L)
@@ -163,13 +187,19 @@ if __name__ == "__main__":
     """
     seg_dir = os.path.join("..", "data", "seg_nodules")
     files = [os.path.join(seg_dir, f) for f in os.listdir(seg_dir)]
+    #files = files[18:]
 
     def yield_predictions():
         for f in files:
-            yield np.load(f)['arr_0']*1
-
+            print "Processing {}".format(f)
+            yield np.load(f, mmap_mode='r')['arr_0']*1
 
     froc = calculate_froc(files, yield_predictions())
+    np.save("../data/froc", froc)
     plt.scatter(*zip(*froc))
     plt.show()
+    c_sizes = sorted(center_sizes.keys())
+    plt.scatter(c_sizes, [center_sizes[k] for k in c_sizes])
+    plt.show()
     raw_input("Press [Enter] to finish")
+
