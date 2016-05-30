@@ -117,9 +117,9 @@ def test(meta_data):
         predictions = fixed_predictions[:, :512, :512]
 
         # Save mask
-        np.savez("lung_masks/" + file_name, predictions)
+        np.savez_compressed("lung_masks/" + file_name, predictions.astype(np.bool))
 
-        print "Accuracy: {}".format(dice_score(predictions, targets))
+        print "Dice: {}".format(dice_score(predictions, targets))
     return
 
 if __name__ == '__main__':
