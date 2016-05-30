@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import theano
 import theano.tensor as T
 import sys
+from time import time
 
 
 def dice_score(p,t):
@@ -61,6 +62,7 @@ def load_network(network_path = '../networks/trained_segmentation/network_epoch2
     return network
     
 def fix(predictions, width, height):
+    # Rotate every 9x9 block 180 degrees
     fixed = np.zeros_like(predictions)
     for s in range(predictions.shape[0]):
         for x in range(0, 513, width):
@@ -74,6 +76,7 @@ def test(meta_data):
     
     reader = ImageReader(meta_data=meta_data)
     for inputs, targets, file_name in tqdm(reader):
+        start_time = time()
         predictions = np.zeros((targets.shape[0], targets.shape[1]+1, targets.shape[2]+1))
         
         inputs = inputs.reshape(-1, 1, 512, 512)
@@ -102,14 +105,11 @@ def test(meta_data):
 
                 j += 1
 
-            #plt.imshow(subject_predictions[60], cmap='gray')
-            #plt.show()
             predictions = stitch(predictions, subject_predictions, i, width+1, height+1)
             i += 1
             
             # Dirty fix
             fixed_predictions = fix(predictions, width+1, height+1)
-            
 
             #plt.imshow(fixed_predictions[60, :, :], cmap='gray')
             #plt.savefig(str(i) + '.png')
@@ -119,7 +119,7 @@ def test(meta_data):
         # Save mask
         np.savez_compressed("lung_masks/" + file_name, predictions.astype(np.bool))
 
-        print "Dice: {}".format(dice_score(predictions, targets))
+        print "Dice: {} in %.2f seconds".format(dice_score(predictions, targets), time() - start_time)
     return
 
 if __name__ == '__main__':
