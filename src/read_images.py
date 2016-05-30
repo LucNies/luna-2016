@@ -51,7 +51,6 @@ class ImageReader:
             image_location, label_locations, subject_name = self.get_locations()
             subject, segmentation = load_itk_images(image_location, label_locations)
             subject = subject - self.mean
-            print self.mean
             segmentation = segmentation >= 3
             print self.get_locations()
             subject = subject.astype(np.float32)

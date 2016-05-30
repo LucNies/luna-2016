@@ -118,7 +118,7 @@ def cumulative(L):
 
 
 def grab_right_t(L):
-    cur_t = L[0][0] # To prevent nL.append on first iteration
+    cur_t = L[0] # To prevent nL.append on first iteration
     cur_LL = 0
     cur_LN = 0
     nL = []
@@ -185,7 +185,7 @@ if __name__ == "__main__":
 
     froc = calculate_froc(files, generate_annotations(files))
     """
-    seg_dir = os.path.join("..", "data", "seg_nodules")
+    seg_dir = os.path.join("..", "segmentations", "nodules")
     files = [os.path.join(seg_dir, f) for f in os.listdir(seg_dir)]
     #files = files[18:]
 

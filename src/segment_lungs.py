@@ -72,7 +72,7 @@ def test():
     network = load_network()
     
     reader = ImageReader()
-    for inputs, targets in tqdm(reader):
+    for inputs, targets, file_name in tqdm(reader):
         predictions = np.zeros((targets.shape[0], targets.shape[1]+1, targets.shape[2]+1))
         
         inputs = inputs.reshape(-1, 1, 512, 512)
@@ -110,8 +110,8 @@ def test():
             fixed_predictions = fix(predictions, width+1, height+1)
             
 
-            plt.imshow(fixed_predictions[60, :, :], cmap='gray')
-            plt.savefig(str(i) + '.png')
+            #plt.imshow(fixed_predictions[60, :, :], cmap='gray')
+            #plt.savefig(str(i) + '.png')
             
         predictions = fixed_predictions[:, :512, :512]
 
