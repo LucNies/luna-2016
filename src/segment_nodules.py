@@ -31,7 +31,7 @@ def test(network_path = '../networks/nodule_segmentation/network_epoch17.npz'):
         height = lung_mask.shape[2] / lasagne.layers.get_output_shape(network, inputs.shape)[3]
 
         X = T.tensor4('X')
-        prediction = lasagne.layers.get_output(network, inputs=X)
+        prediction = lasagne.layers.get_output(network, inputs=X, deterministic=True)
         e_x = T.exp(prediction - prediction.max(axis=1, keepdims=True))
         out = (e_x / e_x.sum(axis=1, keepdims=True))
         out = T.argmax(out, axis=1)

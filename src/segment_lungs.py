@@ -5,7 +5,7 @@ Created on Wed May 18 00:04:46 2016
 @author: The Mountain
 """
 
-from stitch_m import create_network
+from network import create_network
 from read_images import ImageReader
 from tqdm import tqdm
 import lasagne
@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import theano
 import theano.tensor as T
+import sys
 
 
 def dice_score(p,t):
@@ -68,10 +69,10 @@ def fix(predictions, width, height):
                 
     return fixed
 
-def test():
+def test(meta_data):
     network = load_network()
     
-    reader = ImageReader()
+    reader = ImageReader(meta_data=meta_data)
     for inputs, targets, file_name in tqdm(reader):
         predictions = np.zeros((targets.shape[0], targets.shape[1]+1, targets.shape[2]+1))
         
@@ -81,7 +82,7 @@ def test():
         height = targets.shape[2] / lasagne.layers.get_output_shape(network, inputs.shape)[3]
 
         X = T.tensor4('X')
-        prediction = lasagne.layers.get_output(network, inputs=X)
+        prediction = lasagne.layers.get_output(network, inputs=X, deterministic=True)
         e_x = T.exp(prediction - prediction.max(axis=1, keepdims=True))
         out = (e_x / e_x.sum(axis=1, keepdims=True))
         out = T.argmax(out, axis=1)
@@ -115,8 +116,14 @@ def test():
             
         predictions = fixed_predictions[:, :512, :512]
 
-        print "Accuracy: {}".format(dice_score(fixed_predictions, targets))
+        # Save mask
+        np.savez("lung_masks/" + file_name, predictions)
+
+        print "Accuracy: {}".format(dice_score(predictions, targets))
     return
 
 if __name__ == '__main__':
-    test()
+    if len(sys.argv) > 1:
+        test(sys.argv[1])
+    else:
+        print("Error, first argument should be a meta_data file: python segment_lungs.py <meta_data file>")
