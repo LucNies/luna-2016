@@ -52,7 +52,7 @@ def shift(inputs, network):
         for j in range(n_shifts[1]):
             yield shift_matrix(inputs, (i,j))
 
-def load_network(network_path = '../networks/trained_segmentation/network_epoch24.npz'):
+def load_network(network_path = '../networks/lung_segmentation/network_epoch16.npz'):
     network = create_network()
     with np.load(network_path) as f:
         param_values = [f['arr_%d' % i] for i in range(len(f.files))]

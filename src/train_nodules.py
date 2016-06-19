@@ -15,6 +15,7 @@ from read_nodule_patches import NoduleReader
 import time
 from sklearn.metrics import confusion_matrix
 from network import load_network, create_network
+import matplotlib.pyplot as plt
 
 filter_size = (3,3)
 learning_rate = 0.000001
@@ -59,6 +60,11 @@ def training(network):
     test_loss = loss.mean()
 
     val_fn = theano.function([X, Y], [test_prediction, test_loss])#, acc])
+    losses = np.zeros(n_epochs)
+    losses_val = np.zeros(n_epochs)
+    dices = np.zeros(n_epochs)
+    val_results = np.zeros((n_epochs, 2, 2))
+    plt_path  = '../graphs/'
     
     begin = time.time()
     print "Start training" 
@@ -87,6 +93,7 @@ def training(network):
             
             train_err += loss
             train_batches+=1
+            
             #print "Current subject: {} current slice: {}".format(reader.current, reader.current_slice)
             #print "n positve labels: {}".format(sum(targets))
             
@@ -103,7 +110,7 @@ def training(network):
         val_loss = 0
         conf_matrix = np.zeros((2,2))
         #Validationset
-        reader = NoduleReader(meta_data = 'validation_set.stat')
+        reader = NoduleReader(meta_data = 'validation_set.stat', class_balance = 0.01)
         for inputs, targets in tqdm(reader):
             test_prediction, test_loss = val_fn(inputs, targets)
             target_labels = [label.argmax() for label in targets]
@@ -112,21 +119,38 @@ def training(network):
             val_loss += test_loss
             val_batches += 1
             
+            
                 
         dice = dice_score(conf_matrix)
             
         print "Validation loss: {}".format(val_loss/float(val_batches))
         print "Dice score: {}".format(dice) 
-        print "True positives: {} \n False negative: {} \nFalse positive {} \n True negatives {} (postive is lung, negative is background)".format(conf_matrix[1][1], conf_matrix[0][1], conf_matrix[1][0], conf_matrix[0][0])
+        print "True positives: {} \n False negative: {} \nFalse positive {} \n True negatives {} (postive is lung, negative is background)".format(conf_matrix[1][1], conf_matrix[1][0], conf_matrix[0][1], conf_matrix[0][0])
 
+        losses[epoch] = train_err / float(train_batches)
+        losses_val[epoch] = val_loss/float(val_batches)
+        dices[epoch] = dice
+        val_results[epoch] = conf_matrix
         
         print "save model..."
         np.savez('../networks/nodule_segmentation/network_epoch{}.npz'.format(epoch), *lasagne.layers.get_all_param_values(network))
+        plt.plot(losses[:epoch], label = 'loss')
+        plt.plot(losses_val[:epoch], label = 'loss_val')
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        plt.savefig(plt_path + 'losses.png')
+        plt.clf()
+        plt.plot(dices[:epoch])
+        plt.savefig(plt_path + 'dice.png')
+        plt.clf()
+        np.save(plt_path + 'confusion_matirx.p', val_results)
+        np.save(plt_path + 'loss.p', losses)
+        np.save(plt_path + 'loss_val.p', losses_val)
+        np.save(plt_path + 'dices.p', dices)        
         
         
     print "Total runtime: " +str(time.time()-begin)
     
 if __name__ == "__main__":
-    network = load_network()
-    #network = create_network()
+    #network = load_network()
+    network = create_network()
     training(network)

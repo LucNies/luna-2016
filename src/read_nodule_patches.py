@@ -18,7 +18,7 @@ import preprocess
 import pickle
 import getpass
 import time
-
+import IPython
 
 if getpass.getuser() == 'harmen':
     lbl_path = os.path.join("..", "data", "seg-lungs-LUNA16")
@@ -34,7 +34,7 @@ class NoduleReader:
     Class balance = n_nodule_pixels/n_non_nodule_pixels
     """
 
-    def __init__(self, batch_size = 1000, shuffle = True, class_balance = 0.9, meta_data = 'image_stats.stat', label_path = lbl_path, patch_shape = (64,64)):
+    def __init__(self, batch_size = 1000, shuffle = True, class_balance = 0.2, meta_data = 'image_stats.stat', label_path = lbl_path, patch_shape = (64,64), mask = True):
 
         if not os.path.isfile(meta_data):
             preprocess.preprocess()
@@ -55,6 +55,7 @@ class NoduleReader:
         self.shuffle = shuffle
         self.patch_shape = patch_shape
         self.class_balance = class_balance
+        self.mask = mask
 
     def __iter__(self):
         return self
@@ -77,7 +78,7 @@ class NoduleReader:
             #while the batch size is not full and while there are subjects left
             while n_batches < self.batch_size and self.current < self.n_samples:
 
-                batch, labels = load_subject(*self.get_locations())
+                batch, labels, mask = self.load_subject(*self.get_locations())
                 batch = batch - self.mean
                  
                 #loop over the slices starting from the current slice (0 if new subject, higher if batch was full before while there were still some slices left)
@@ -87,7 +88,7 @@ class NoduleReader:
                     
                     if label.sum() > 0: # so there is a nodule in the slice
                         #print n_batches, n_batches*n_patches+n_patches, self.batch_size
-                        image_patches, image_labels = self.patch(batch[i], label, n_patches) #the actual patching
+                        image_patches, image_labels = self.patch(batch[i], label, n_patches, mask[i]) #the actual patching
                         patch_batch[n_batches*n_patches:n_batches*n_patches+n_patches] = image_patches
                         patch_labels[n_batches*n_patches:n_batches*n_patches+n_patches] = image_labels
                         n_batches += 1
@@ -123,12 +124,11 @@ class NoduleReader:
             return patch_batch[indices], patch_labels[indices]
 
 
-    def patch(self, image, labels, n_patches):
+    def patch(self, image, labels, n_patches, mask = None):
         # output:
         # image: (n_patches, 1, 64, 64)
         # label: (n_patches)
               
-    
         patches = np.zeros((n_patches, 1, 64, 64), dtype=np.float32)
         patch_labels = np.zeros((n_patches, 2), dtype = np.float32)
         
@@ -138,12 +138,20 @@ class NoduleReader:
         
         #Get all lables in range
         all_labels = labels[patch_size/2 :  image.shape[0]- patch_size/2 + 1, patch_size/2 : image.shape[1] - patch_size/2 + 1].flatten()
-     
+        
+        
+        #Get all labels in mask
+
         #split labels in positive and negative samples (indices)
-        neg_labels = np.argwhere(all_labels == 0).flatten()
+        if self.mask:
+            mask_labels = mask[patch_size/2 :  image.shape[0]- patch_size/2 + 1, patch_size/2 : image.shape[1] - patch_size/2 + 1].flatten()
+            final_mask = ((all_labels + 1) % 2) * mask_labels
+            neg_labels = np.argwhere(final_mask == 1).flatten()
+        else:
+            final_mask = all_labels
+            neg_labels = np.argwhere(final_mask == 0).flatten()
         pos_labels = np.argwhere(all_labels == 1).flatten()
-        
-        
+   
         n_positives = min(len(pos_labels),n_patches*self.class_balance) #Not always enough positive labels, sometimes even 0.
         n_negatives = n_patches - n_positives #Are always more negative than positive labels
         
@@ -170,9 +178,9 @@ class NoduleReader:
         image_location = self.file_names[self.current]
         split = image_location.split('/')
         label_location = os.path.join(self.label_path, (str(split[-1]) + '.npz')) 
-
+        mask_location = os.path.join('lung_masks', (str(split[-1]) + '.npz'))
         
-        return image_location, label_location
+        return image_location, label_location, mask_location
     
     def augment_patches(self, patches):
         
@@ -191,17 +199,24 @@ class NoduleReader:
             
         
     
-
-def load_subject(input_path, target_path):
-    itkinput = sitk.ReadImage(input_path)
-    numpyinput = sitk.GetArrayFromImage(itkinput)
     
-
-    candidates = np.load(target_path)['arr_0']
-
-
-    return numpyinput, candidates
-
+    def load_subject(self, input_path, target_path, mask_path):
+        
+        try:
+            itkinput = sitk.ReadImage(input_path)
+            numpyinput = sitk.GetArrayFromImage(itkinput)
+            
+            if self.mask:
+                mask = np.load(mask_path)['arr_0']
+            
+            candidates = np.load(target_path)['arr_0']
+            
+            
+            return numpyinput, candidates, mask
+        except IOError as (errno, strerror):
+            print "cannot open: {}".format(strerror)
+            self.current+=1
+            return self.load_subject(*self.get_locations())
 
 
 if __name__ == "__main__":
@@ -216,11 +231,11 @@ if __name__ == "__main__":
         
     
     
-    """
-    for i, label in enumerate(labels):
-        print patch.shape
-        print  label
-        plt.imshow(patch[i, 0, :, :], cmap='gray')
-        plt.show()
-    """
+    
+        for i, label in enumerate(labels):
+            print patch.shape
+            print  label
+            plt.imshow(patch[i, 0, :, :], cmap='gray')
+            plt.show()
+    
 
