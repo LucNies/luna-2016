@@ -51,14 +51,18 @@
 % Introduction
 \section{Introduction}
 \label{sec:intro}
-\emph{LUng Nodule Analysis 2016 (LUNA16)} challenge
+For the \emph{LUng Nodule Analysis 2016 (LUNA16)} challenge, we want to detect pulmonary nodules in low-dose thoracic CT images as accurately as possible. Initially the challenge is separated into three different phases; lung segmentation, candidate detection and false positive reduction. For the first two phases, we tried two different approaches. Firstly, we used deep learning to create a network that could train on the images and could recognize areas of interest. For the first phase these areas were the lung regions, for the second these areas were possible nodules in the lung regions. This way, we could treat both phases as a segmentation problem and could use the same network. Secondly, we used a more traditional approach using image processing techniques like region growing and blob detection in the images to complete these phases.\\
+\indent After the second phase, we had so far obtained marginally better results for the deep learning approach than the traditional approach. Therefore, we focus solely on our deep learning approach for the third phase.\\
+\\
+\indent As mentioned, the third phase of our lung nodule detection challenge is false positive reduction. Heretofore, we have focused on identifying as many possible candidates as possible to include all annotated nodules in our selection. Thus, we only aimed at a high recall, but did not care much for precision. In this phase, we aim to obtain both high recall and high precision. We approached this problem by going back to the initial candidate selection, instead of taking our candidates and making a subselection to reduce the false positives. By tuning our network parameters and trying different settings overall, we tried to achieve better initial candidate selection and thus not needing false positive reduction, merging the second and third phase of the challenge. \\
+\indent Our approach and its results are explained in further detail in the following sections.
+
 
 % Method
-\section{Method}\label{sec:method}
-
+\section{Method}\label{sec:method} 
 \subsection{Fully convolutional networks}
 \subsubsection{Lung segmentation}
-
+\cite{long}
 
 \subsubsection{Nodule detection}
 \label{sec:fcn}
