@@ -61,7 +61,8 @@ For the \emph{LUng Nodule Analysis 2016 (LUNA16)} challenge, we want to detect p
 % Method
 \section{Method}\label{sec:method} 
 \subsection{Fully convolutional networks}
-\subsubsection{Lung segmentation}
+\subsubsection{Lung segmentation post-processing}
+We've made use of the segmentations created by the network in earlier phases of the project, in order to more carefully select training patches from the images for training. A small issue with the segmentations created by the network is that there is some noise surrounding the actual lung segmentation. In order to use these segmentations for patch selection, the noise has to be removed from the images. In order to remove the noise, we perform an connected component analysis with a very small 3d-6 neighborhood. This divides the noise next to the segmentations into a large number of small connected components, but still sees the lungs and one large connected component. After this step, only the largest component in the image is selected and used as the real segmentation. This method works for every image in the dataset.
 \cite{long}
 
 \subsubsection{Nodule detection}
