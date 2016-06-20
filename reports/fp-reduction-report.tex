@@ -1,0 +1,111 @@
+% Template for CAD in medical imaging - Project Report
+%          spconf.sty  - ICASSP/ICIP LaTeX style file, and
+%          IEEEbib.bst - IEEE bibliography style file.
+% --------------------------------------------------------------------------
+\documentclass{article}
+\usepackage{spconf,amsmath,graphicx}
+\usepackage{subfigure}
+
+% Title
+\title{Computer Aided Diagnosis\\LUNA16: False Positive Reduction}
+%
+\makeatletter
+\def\@name{ \emph{Luc Nies (s4136748)}, \emph{Tom van de Poll (s4106512)}, \emph{Harmen Prins (s4132297)}, \\ \emph{Steven Reitsma (s4132343)} \& \emph{Inez Wijnands (s4149696)}}
+\makeatother
+
+\address{Radboud University Nijmegen}
+%
+% For example:
+% ------------
+%\address{School\\
+%	Department\\
+%	Address}
+%
+% Two addresses (uncomment and modify for two-address case).
+% ----------------------------------------------------------
+%\twoauthors
+%  {A. Author-one, B. Author-two\sthanks{Thanks to XYZ agency for funding.}}
+%	{School A-B\\
+%	Department A-B\\
+%	Address A-B}
+%  {C. Author-three, D. Author-four\sthanks{The fourth author performed the work
+%	while at ...}}
+%	{School C-D\\
+%	Department C-D\\
+%	Address C-D}
+%
+% More than two addresses
+% -----------------------
+% \name{Author Name$^{\star \dagger}$ \qquad Author Name$^{\star}$ \qquad Author Name$^{\dagger}$}
+%
+% \address{$^{\star}$ Affiliation Number One \\
+%     $^{\dagger}$}Affiliation Number Two
+%
+\begin{document}
+%\ninept
+%
+\maketitle
+%
+
+
+% Introduction
+\section{Introduction}
+\label{sec:intro}
+\emph{LUng Nodule Analysis 2016 (LUNA16)} challenge
+
+% Method
+\section{Method}\label{sec:method}
+
+\subsection{Fully convolutional networks}
+\subsubsection{Lung segmentation}
+
+
+\subsubsection{Nodule detection}
+\label{sec:fcn}
+
+
+\subsubsection{False positive reduction}
+
+\subsubsection{Analysing results with FROC}
+
+
+% Experiments
+%\section{Experiments}\label{sec:experiments}
+
+% Results
+\section{Results}\label{sec:results}
+
+
+\appendix
+\section{Contributions}
+\textbf{Luc Nies:} \\
+\\
+\textbf{Tom van de Poll:} \\
+\\
+\textbf{Harmen Prins:} \\
+\\
+\textbf{Steven Reitsma:} \\
+\\
+\textbf{Inez Wijnands:} 
+
+% References should be produced using the bibtex program from suitable
+% BiBTeX files (here: strings, refs, manuals). The IEEEbib.bst bibliography
+% style file from IEEE produces unsorted bibliography list.
+% -------------------------------------------------------------------------
+\bibliographystyle{IEEEbib}
+
+\begin{thebibliography}{}
+\bibitem{long}
+J. Long, E. Shelhamer \& T. Darrell (2015). Fully convolutional networks for semantic segmentation. \emph{Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition}: 3431--3440.
+
+\bibitem{simonyan}
+K. Simonyan \& A. Zisserman (2014). Very deep convolutional networks for large-scale image recognition. \emph{arXiv:1409.1556}
+
+%\bibitem{leemput}
+%S. van de Leemput, F. Dorssers \& B.E. Bejnordi (2015). A novel spherical shell filter for reducing false positives in automatic detection of pulmonary nodules in thoracic CT scans. \emph{Proceedings SPIE Medical Imaging, 9414}:94142P.
+
+\end{thebibliography}
+
+
+
+\end{document}
