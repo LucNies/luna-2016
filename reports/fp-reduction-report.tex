@@ -70,8 +70,10 @@ We've made use of the segmentations created by the network in earlier phases of 
 
 
 \subsubsection{False positive reduction}
+The FCN produces many false-positive pixels, thus producing a low precision. However, those pixels are almost never clustered together. Consequently, it is possible to do a connected components analysis on the output of the network and remove all components with a volume below a threshold. This threshold can be set manually or optimized using a small part of the data set. The second option is a good idea for future work.
 
 \subsubsection{Analysing results with FROC}
+To transform raw pixel data to coordinates as required by the FROC analysis, the same connected components analysis as for the false positive reduction is applied, and the centre of every component is located. Then, the FROC analysis is performed with the nodule diameter as the distance threshold. This means that every prediction that falls within a nodule is counted as a true positive and otherwise as a false positive.
 
 \subsection{3D convolutional networks}
 Next to the fully convolutional network approach, we also tested a three-dimensional convolutional network approach.
@@ -121,9 +123,9 @@ The results for the 3D convolutional network are shown in Table \ref{tbl:results
 	\hline
 
 	\hline
-	\textbf{Precision} & \textbf{Recall} \\
+	\textbf{Precision} & \textbf{Recall} & \textbf{$F_1$}\\
 	\hline
-		 0.87 & 0.92 \\
+		 0.87 & 0.92 & 0.89\\
 	\hline
 
 	\hline
@@ -142,7 +144,7 @@ We also would have liked to add more data augmentation and to optimize the netwo
 \\
 \textbf{Tom van de Poll:} Contributed to segmentation post-processing and wrote the report section on this topic\\
 \\
-\textbf{Harmen Prins:} \\
+\textbf{Harmen Prins:} Built connected components filter and FROC analysis. Wrote the corresponding sections.\\
 \\
 \textbf{Steven Reitsma:} Built the 3D convolutional network and wrote the report sections on this topic.\\
 \\
